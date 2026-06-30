@@ -1,0 +1,203 @@
+import React, { useState, useEffect } from 'react';
+import { useDataStore } from '../../store/dataStore';
+import { useAuthStore } from '../../store/authStore';
+
+interface FuelFillFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export const FuelFillForm: React.FC<FuelFillFormProps> = ({
+  onSuccess,
+  onCancel
+}) => {
+  const { user } = useAuthStore();
+  const { vehicles, drivers, fetchVehicles, fetchDrivers, addFuelFill, tank } = useDataStore();
+
+  const [vehicleId, setVehicleId] = useState('');
+  const [driverId, setDriverId] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [mileage, setMileage] = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchVehicles(user.ownerId);
+      fetchDrivers(user.ownerId);
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setError(null);
+    const qty = parseFloat(quantity);
+    const mil = parseFloat(mileage);
+
+    if (isNaN(qty) || qty <= 0) {
+      setError('Veuillez entrer une quantité valide de carburant.');
+      return;
+    }
+
+    if (tank && qty > tank.currentVolume) {
+      setError(`Quantité demandée (${qty}L) dépasse le stock actuel de la citerne (${tank.currentVolume}L).`);
+      return;
+    }
+
+    if (isNaN(mil) || mil <= 0) {
+      setError('Veuillez entrer un kilométrage valide.');
+      return;
+    }
+
+    const selectedVehicle = vehicles.find(v => v.id === vehicleId);
+    if (selectedVehicle && mil <= selectedVehicle.currentMileage) {
+      setError(`Le kilométrage saisi (${mil} km) doit être supérieur au kilométrage actuel du véhicule (${selectedVehicle.currentMileage} km).`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addFuelFill({
+        vehicleId,
+        driverId,
+        quantity: qty,
+        mileage: mil,
+        notes: notes.trim() || undefined,
+        performedBy: user.id,
+        ownerId: user.ownerId
+      });
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l\'enregistrement du plein.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const activeVehicles = vehicles.filter(v => v.status === 'active');
+  const activeDrivers = drivers.filter(d => d.status === 'active');
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><path d="M3 22v-4h18v4H3z M12 2v12 M7 8h10" /></svg>
+        Nouveau plein de gasoil
+      </h2>
+
+      {error && (
+        <div style={{
+          backgroundColor: 'var(--accent-red-glow)',
+          color: 'var(--accent-red)',
+          padding: '0.75rem 1rem',
+          borderRadius: '8px',
+          marginBottom: '1.25rem',
+          fontSize: '0.85rem',
+          fontWeight: 500,
+          border: '1px solid rgba(239, 68, 68, 0.2)'
+        }}>
+          {error}
+        </div>
+      )}
+
+      <div className="form-group">
+        <label className="form-label">Véhicule</label>
+        <select 
+          className="form-control"
+          value={vehicleId}
+          onChange={(e) => setVehicleId(e.target.value)}
+          required
+        >
+          <option value="">-- Sélectionner le véhicule --</option>
+          {activeVehicles.map(v => (
+            <option key={v.id} value={v.id}>
+              {v.brand} {v.model} ({v.plateNumber})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Chauffeur</label>
+        <select 
+          className="form-control"
+          value={driverId}
+          onChange={(e) => setDriverId(e.target.value)}
+          required
+        >
+          <option value="">-- Sélectionner le chauffeur --</option>
+          {activeDrivers.map(d => (
+            <option key={d.id} value={d.id}>
+              {d.fullName} (CIN: {d.cin})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Quantité (Litres)</label>
+        <input 
+          type="number" 
+          className="form-control"
+          placeholder="Quantité de carburant"
+          min="1"
+          step="0.1"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Kilométrage actuel (km)</label>
+        <input 
+          type="number" 
+          className="form-control"
+          placeholder="Kilométrage du compteur"
+          min="1"
+          value={mileage}
+          onChange={(e) => setMileage(e.target.value)}
+          required
+        />
+        {vehicleId && vehicles.find(v => v.id === vehicleId) && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            Dernier kilométrage enregistré: {vehicles.find(v => v.id === vehicleId)?.currentMileage} km
+          </span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Notes / Observations</label>
+        <textarea 
+          className="form-control"
+          placeholder="Remarques éventuelles..."
+          rows={3}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+        <button 
+          type="button" 
+          className="btn btn-secondary" 
+          onClick={onCancel}
+          style={{ flex: 1 }}
+          disabled={submitting}
+        >
+          Annuler
+        </button>
+        <button 
+          type="submit" 
+          className="btn btn-primary"
+          style={{ flex: 1 }}
+          disabled={submitting}
+        >
+          {submitting ? 'Enregistrement...' : 'Confirmer'}
+        </button>
+      </div>
+    </form>
+  );
+};
