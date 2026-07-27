@@ -121,15 +121,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: authData.user.id,
           email: authData.user.email || email,
           fullName: 'Nouveau Membre',
-          role: 'agent',
+          role: 'admin',
           ownerId: authData.user.id,
           isCompleted: false,
           permissions: {
-            can_refill: false,
-            can_add_vehicle: false,
-            can_add_driver: false,
-            can_view_reports: false,
-            can_manage_users: false,
+            can_refill: true,
+            can_add_vehicle: true,
+            can_add_driver: true,
+            can_view_reports: true,
+            can_manage_users: true,
           }
         };
       } else {
@@ -251,7 +251,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!isDemo) {
       const { error } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: currentUser.id,
           email: currentUser.email,
           full_name: fullName,
@@ -295,7 +295,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!data.user) throw new Error("Erreur lors de la création du compte agent.");
 
       // Insert profile for the new agent, linking it to the current admin's ownerId
-      const { error: profileError } = await supabase.from('profiles').insert({
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: data.user.id,
         email: data.user.email,
         full_name: "Agent de Carburant",
