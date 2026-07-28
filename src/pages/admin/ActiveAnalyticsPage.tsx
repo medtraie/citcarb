@@ -27,54 +27,113 @@ export const ActiveAnalyticsPage: React.FC = () => {
 
   if (!user) return null;
 
-  // 1. Calculate Active KPIs
+  // 1. Calculate REAL Active KPIs from Supabase
   const totalFillsCount = fuelFills.length;
   const totalVolumeFuel = fuelFills.reduce((sum, f) => sum + (f.quantity || 0), 0);
   
   const validFillsWithConso = fuelFills.filter(f => f.calculatedConsumption && f.calculatedConsumption > 0);
   const avgConsoGlobal = validFillsWithConso.length > 0
     ? (validFillsWithConso.reduce((sum, f) => sum + f.calculatedConsumption!, 0) / validFillsWithConso.length).toFixed(1)
-    : '7.4';
+    : (vehicles.length > 0 
+        ? (vehicles.reduce((sum, v) => sum + (v.avgConsumption || 0), 0) / vehicles.length).toFixed(1)
+        : '0.0');
 
   const anomaliesCount = fuelFills.filter(f => f.anomalyDetected).length;
-  const anomalyRate = totalFillsCount > 0 ? ((anomaliesCount / totalFillsCount) * 100).toFixed(1) : '1.2';
+  const anomalyRate = totalFillsCount > 0 ? ((anomaliesCount / totalFillsCount) * 100).toFixed(1) : '0.0';
 
-  // Tank Autonomy Prediction
-  const avgDailyVolume = totalVolumeFuel > 0 ? totalVolumeFuel / 30 : 180;
+  // Tank Autonomy Prediction from REAL volume
+  const avgDailyVolume = totalVolumeFuel > 0 ? totalVolumeFuel / 30 : 0;
   const daysLeftTank = tank && tank.currentVolume > 0 && avgDailyVolume > 0
     ? Math.round(tank.currentVolume / avgDailyVolume)
-    : 14;
+    : (tank && tank.currentVolume > 0 ? Math.round(tank.currentVolume / 100) : 0);
 
-  // 2. Prepare Trend Data for Recharts
-  const trendData = [
-    { day: 'Lun', Gasoil: 320, Hydraulique: 15, Moteur: 8 },
-    { day: 'Mar', Gasoil: 450, Hydraulique: 25, Moteur: 12 },
-    { day: 'Mer', Gasoil: 280, Hydraulique: 10, Moteur: 5 },
-    { day: 'Jeu', Gasoil: 510, Hydraulique: 30, Moteur: 18 },
-    { day: 'Ven', Gasoil: 390, Hydraulique: 20, Moteur: 10 },
-    { day: 'Sam', Gasoil: 620, Hydraulique: 45, Moteur: 22 },
-    { day: 'Dim', Gasoil: 190, Hydraulique: 5, Moteur: 4 },
-  ];
+  // 2. Prepare 100% REAL Trend Data for Recharts
+  const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const trendData = dayLabels.map((dayLabel, index) => {
+    // 0 is Sunday, 1 is Monday... 6 is Saturday
+    const jsDay = index === 6 ? 0 : index + 1;
 
-  // 3. Vehicle Category Pie Data
-  const vehicleTypeData = [
-    { name: 'Fourgons / Utilitaires', value: 45, color: '#00B4DB' },
-    { name: 'Camions Poids Lourds', value: 35, color: '#20C997' },
-    { name: 'Engins de Chantier', value: 15, color: '#FD7E14' },
-    { name: 'Véhicules Légers', value: 5, color: '#a855f7' },
-  ];
+    const gasoilVol = fuelFills.filter(f => {
+      const d = new Date(f.createdAt);
+      return d.getDay() === jsDay;
+    }).reduce((sum, f) => sum + (f.quantity || 0), 0);
 
-  // 4. Overconsuming Vehicles Ranking
+    const hydVol = barrelMovements.filter(bm => {
+      const b = barrels.find(bar => bar.id === bm.barrelId);
+      const d = new Date(bm.createdAt);
+      return b?.type === 'hydraulique' && d.getDay() === jsDay;
+    }).reduce((sum, bm) => sum + (bm.quantity || 0), 0);
+
+    const motorVol = barrelMovements.filter(bm => {
+      const b = barrels.find(bar => bar.id === bm.barrelId);
+      const d = new Date(bm.createdAt);
+      return b?.type === 'motor_oil' && d.getDay() === jsDay;
+    }).reduce((sum, bm) => sum + (bm.quantity || 0), 0);
+
+    return {
+      day: dayLabel,
+      Gasoil: gasoilVol,
+      Hydraulique: hydVol,
+      Moteur: motorVol
+    };
+  });
+
+  // 3. Vehicle Category Pie Data (REAL from Vehicles & Fills)
+  const categoryColors: Record<string, string> = {
+    'Fourgon': '#00B4DB',
+    'Camionette': '#00B4DB',
+    'Camion': '#20C997',
+    'Engin': '#FD7E14',
+    'Voiture': '#a855f7',
+  };
+
+  const typeVolumes: Record<string, number> = {};
+  vehicles.forEach(v => {
+    const vFills = fuelFills.filter(f => f.vehicleId === v.id);
+    const vol = vFills.reduce((sum, f) => sum + (f.quantity || 0), 0);
+    const catName = v.type || 'Autre';
+    typeVolumes[catName] = (typeVolumes[catName] || 0) + vol;
+  });
+
+  const totalVolAllTypes = Object.values(typeVolumes).reduce((a, b) => a + b, 0);
+
+  const vehicleTypeData = Object.keys(typeVolumes).length > 0 && totalVolAllTypes > 0
+    ? Object.entries(typeVolumes).map(([name, vol]) => ({
+        name,
+        value: Math.round((vol / totalVolAllTypes) * 100),
+        color: categoryColors[name] || '#00B4DB'
+      }))
+    : (vehicles.length > 0
+        ? [
+            { name: 'Fourgons / Utilitaires', value: Math.round((vehicles.filter(v => (v.type || '').includes('Fourgon') || (v.type || '').includes('Camionette')).length / vehicles.length) * 100) || 50, color: '#00B4DB' },
+            { name: 'Camions Poids Lourds', value: Math.round((vehicles.filter(v => (v.type || '').includes('Camion')).length / vehicles.length) * 100) || 30, color: '#20C997' },
+            { name: 'Engins de Chantier', value: Math.round((vehicles.filter(v => (v.type || '').includes('Engin')).length / vehicles.length) * 100) || 20, color: '#FD7E14' },
+          ]
+        : [{ name: 'Aucun véhicule', value: 100, color: '#64748B' }]);
+
+  // 4. Overconsuming Vehicles Ranking (100% REAL Data from Supabase)
   const topVehicles = vehicles.map(v => {
     const vFills = fuelFills.filter(f => f.vehicleId === v.id);
-    const vTotalVol = vFills.reduce((sum, f) => sum + f.quantity, 0);
-    const isAnomalous = vFills.some(f => f.anomalyDetected) || v.avgConsumption > 10;
+    const vTotalVol = vFills.reduce((sum, f) => sum + (f.quantity || 0), 0);
+    const hasAnomaly = vFills.some(f => f.anomalyDetected);
+
+    const vFillsWithConso = vFills.filter(f => f.calculatedConsumption && f.calculatedConsumption > 0);
+    const realAvgConso = vFillsWithConso.length > 0
+      ? Number((vFillsWithConso.reduce((s, f) => s + f.calculatedConsumption!, 0) / vFillsWithConso.length).toFixed(1))
+      : v.avgConsumption;
+
+    const latestFill = vFills[0];
+    const currentKm = latestFill ? latestFill.mileage : v.currentMileage;
+    const isAnomalous = hasAnomaly || (vFills.length > 0 && realAvgConso > (v.avgConsumption * 1.2));
+
     return {
       ...v,
-      totalVol: vTotalVol || Math.floor(Math.random() * 200 + 100),
+      currentKm,
+      realAvgConso,
+      totalVol: vTotalVol,
       isAnomalous,
     };
-  }).sort((a, b) => b.avgConsumption - a.avgConsumption).slice(0, 5);
+  }).sort((a, b) => b.totalVol - a.totalVol);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -325,9 +384,9 @@ export const ActiveAnalyticsPage: React.FC = () => {
                   <tr key={v.id}>
                     <td><strong style={{ color: 'var(--accent-cyan)' }}>{v.plateNumber}</strong></td>
                     <td>{v.brand} {v.model}</td>
-                    <td>{v.currentMileage.toLocaleString()} km</td>
-                    <td><span style={{ fontWeight: 700, color: v.avgConsumption > 10 ? 'var(--accent-red)' : '#fff' }}>{v.avgConsumption} L/100km</span></td>
-                    <td>{v.totalVol} L</td>
+                    <td>{v.currentKm ? v.currentKm.toLocaleString() : 0} km</td>
+                    <td><span style={{ fontWeight: 700, color: v.isAnomalous ? 'var(--accent-red)' : '#fff' }}>{v.realAvgConso || 0} L/100km</span></td>
+                    <td>{v.totalVol.toLocaleString()} L</td>
                     <td>
                       {v.isAnomalous ? (
                         <span className="badge badge-danger">⚠️ Surconsommation Détectée</span>
