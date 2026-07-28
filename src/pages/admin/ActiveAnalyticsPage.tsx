@@ -120,17 +120,18 @@ export const ActiveAnalyticsPage: React.FC = () => {
     const vFillsWithConso = vFills.filter(f => f.calculatedConsumption && f.calculatedConsumption > 0);
     const realAvgConso = vFillsWithConso.length > 0
       ? Number((vFillsWithConso.reduce((s, f) => s + f.calculatedConsumption!, 0) / vFillsWithConso.length).toFixed(1))
-      : v.avgConsumption;
+      : 0;
 
     const latestFill = vFills[0];
-    const currentKm = latestFill ? latestFill.mileage : v.currentMileage;
-    const isAnomalous = hasAnomaly || (vFills.length > 0 && realAvgConso > (v.avgConsumption * 1.2));
+    const currentKm = latestFill ? latestFill.mileage : (vFills.length > 0 ? v.currentMileage : 0);
+    const isAnomalous = hasAnomaly || (vFills.length > 0 && v.avgConsumption > 0 && realAvgConso > (v.avgConsumption * 1.2));
 
     return {
       ...v,
       currentKm,
       realAvgConso,
       totalVol: vTotalVol,
+      hasFills: vFills.length > 0,
       isAnomalous,
     };
   }).sort((a, b) => b.totalVol - a.totalVol);
@@ -373,10 +374,21 @@ export const ActiveAnalyticsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {topVehicles.length === 0 ? (
+              {vehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                    Aucun véhicule enregistré.
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📭</div>
+                    <strong>Aucun véhicule enregistré</strong>
+                  </td>
+                </tr>
+              ) : fuelFills.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⛽</div>
+                    <strong>Aucune consommation enregistrée</strong>
+                    <p style={{ fontSize: '0.8rem', marginTop: '0.25rem', opacity: 0.7 }}>
+                      Effectuez un premier plein depuis le Dashboard ou Saisie Rapide pour activer le suivi des consommations.
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -384,11 +396,13 @@ export const ActiveAnalyticsPage: React.FC = () => {
                   <tr key={v.id}>
                     <td><strong style={{ color: 'var(--accent-cyan)' }}>{v.plateNumber}</strong></td>
                     <td>{v.brand} {v.model}</td>
-                    <td>{v.currentKm ? v.currentKm.toLocaleString() : 0} km</td>
-                    <td><span style={{ fontWeight: 700, color: v.isAnomalous ? 'var(--accent-red)' : '#fff' }}>{v.realAvgConso || 0} L/100km</span></td>
+                    <td>{v.hasFills ? `${v.currentKm.toLocaleString()} km` : '0 km'}</td>
+                    <td><span style={{ fontWeight: 700, color: v.isAnomalous ? 'var(--accent-red)' : '#fff' }}>{v.hasFills ? `${v.realAvgConso} L/100km` : '0 L/100km'}</span></td>
                     <td>{v.totalVol.toLocaleString()} L</td>
                     <td>
-                      {v.isAnomalous ? (
+                      {!v.hasFills ? (
+                        <span className="badge" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#64748B' }}>En attente de plein</span>
+                      ) : v.isAnomalous ? (
                         <span className="badge badge-danger">⚠️ Surconsommation Détectée</span>
                       ) : (
                         <span className="badge badge-success">✓ Normal</span>
