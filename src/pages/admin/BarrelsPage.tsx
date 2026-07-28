@@ -5,6 +5,7 @@ import { BarrelCard } from '../../components/barrels/BarrelCard';
 import { ConsumeDialog } from '../../components/barrels/ConsumeDialog';
 import { RefillDialog } from '../../components/barrels/RefillDialog';
 import { AddBarrelDialog } from '../../components/barrels/AddBarrelDialog';
+import { EditBarrelDialog } from '../../components/barrels/EditBarrelDialog';
 import { Barrel } from '../../types';
 
 export const BarrelsPage: React.FC = () => {
@@ -17,12 +18,14 @@ export const BarrelsPage: React.FC = () => {
     fetchBarrelMovements, 
     fetchVehicles, 
     addBarrel,
+    updateBarrel,
     deleteBarrel,
     loading 
   } = useDataStore();
 
   const [selectedConsumeBarrel, setSelectedConsumeBarrel] = useState<Barrel | null>(null);
   const [selectedRefillBarrel, setSelectedRefillBarrel] = useState<Barrel | null>(null);
+  const [selectedEditBarrel, setSelectedEditBarrel] = useState<Barrel | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -81,6 +84,7 @@ export const BarrelsPage: React.FC = () => {
                 barrel={b} 
                 onConsume={() => setSelectedConsumeBarrel(b)}
                 onRefill={() => setSelectedRefillBarrel(b)}
+                onEdit={() => setSelectedEditBarrel(b)}
                 onDelete={() => {
                   if (window.confirm(`Êtes-vous sûr de vouloir supprimer le baril "${b.name}" ?`)) {
                     deleteBarrel(b.id, user.ownerId);
@@ -159,6 +163,13 @@ export const BarrelsPage: React.FC = () => {
           onClose={() => setSelectedRefillBarrel(null)}
         />
       )}
+
+      <EditBarrelDialog
+        barrel={selectedEditBarrel}
+        isOpen={!!selectedEditBarrel}
+        onClose={() => setSelectedEditBarrel(null)}
+        onUpdate={updateBarrel}
+      />
 
       <AddBarrelDialog 
         isOpen={isAddDialogOpen}

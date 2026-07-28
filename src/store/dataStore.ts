@@ -48,6 +48,7 @@ interface DataState {
   // Barrels
   fetchBarrels: (ownerId: string) => Promise<void>;
   addBarrel: (barrel: Omit<Barrel, 'id'> & { id?: string }) => Promise<void>;
+  updateBarrel: (barrel: Barrel) => Promise<void>;
   deleteBarrel: (barrelId: string, ownerId: string) => Promise<void>;
   fetchBarrelMovements: (ownerId: string) => Promise<void>;
   refillBarrel: (params: {
@@ -657,7 +658,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const movementPayload = {
+      const movementPayload: any = {
         id: movId,
         tank_id: tankId,
         type: 'refill',
@@ -670,7 +671,19 @@ export const useDataStore = create<DataState>((set, get) => ({
         created_at: nowStr,
       };
 
-      const { error: movError } = await supabase.from('tank_movements').insert(movementPayload);
+      let { error: movError } = await supabase.from('tank_movements').insert(movementPayload);
+      if (movError && (movError.message?.includes('performed_by_fkey') || movError.code === '23503')) {
+        movementPayload.performed_by = ownerId;
+        const retry1 = await supabase.from('tank_movements').insert(movementPayload);
+        if (retry1.error) {
+          movementPayload.performed_by = null;
+          const retry2 = await supabase.from('tank_movements').insert(movementPayload);
+          movError = retry2.error;
+        } else {
+          movError = null;
+        }
+      }
+
       if (movError) throw movError;
 
       // Update current tank volume
@@ -809,12 +822,46 @@ export const useDataStore = create<DataState>((set, get) => ({
         capacity: barrel.capacity,
         current_volume: barrel.currentVolume,
         alert_threshold: barrel.alertThreshold,
-        unit: barrel.unit,
+        unit: barrel.unit || 'L',
         owner_id: barrel.ownerId,
       };
 
       const { error } = await supabase.from('barrels').insert(payload);
       if (error) throw error;
+      
+      isFetchingBarrelsLock = false;
+      await get().fetchBarrels(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  updateBarrel: async (barrel) => {
+    const ownerId = barrel.ownerId;
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.barrels = demo.barrels.map((b: any) => b.id === barrel.id ? barrel : b);
+      saveDemoData(demo);
+      set({ barrels: [...demo.barrels] });
+      return;
+    }
+
+    try {
+      const payload = {
+        name: barrel.name,
+        type: barrel.type,
+        capacity: barrel.capacity,
+        current_volume: barrel.currentVolume,
+        alert_threshold: barrel.alertThreshold,
+        unit: barrel.unit || 'L',
+      };
+
+      const { error } = await supabase.from('barrels').update(payload).eq('id', barrel.id);
+      if (error) throw error;
+      
+      isFetchingBarrelsLock = false;
       await get().fetchBarrels(ownerId);
     } catch (err: any) {
       set({ error: err.message });
@@ -834,6 +881,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     try {
       const { error } = await supabase.from('barrels').delete().eq('id', barrelId);
       if (error) throw error;
+      
+      isFetchingBarrelsLock = false;
       await get().fetchBarrels(ownerId);
     } catch (err: any) {
       set({ error: err.message });
@@ -912,7 +961,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const movementPayload = {
+      const movementPayload: any = {
         id: movId,
         barrel_id: barrelId,
         type: 'refill',
@@ -925,7 +974,18 @@ export const useDataStore = create<DataState>((set, get) => ({
         created_at: nowStr,
       };
 
-      const { error: movError } = await supabase.from('barrel_movements').insert(movementPayload);
+      let { error: movError } = await supabase.from('barrel_movements').insert(movementPayload);
+      if (movError && (movError.message?.includes('performed_by_fkey') || movError.code === '23503')) {
+        movementPayload.performed_by = ownerId;
+        const retry1 = await supabase.from('barrel_movements').insert(movementPayload);
+        if (retry1.error) {
+          movementPayload.performed_by = null;
+          const retry2 = await supabase.from('barrel_movements').insert(movementPayload);
+          movError = retry2.error;
+        } else {
+          movError = null;
+        }
+      }
       if (movError) throw movError;
 
       const { data: barrelDoc } = await supabase.from('barrels').select('current_volume, capacity').eq('id', barrelId).single();
@@ -999,7 +1059,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const movementPayload = {
+      const movementPayload: any = {
         id: movId,
         barrel_id: barrelId,
         type: 'consume',
@@ -1011,7 +1071,18 @@ export const useDataStore = create<DataState>((set, get) => ({
         created_at: nowStr,
       };
 
-      const { error: movError } = await supabase.from('barrel_movements').insert(movementPayload);
+      let { error: movError } = await supabase.from('barrel_movements').insert(movementPayload);
+      if (movError && (movError.message?.includes('performed_by_fkey') || movError.code === '23503')) {
+        movementPayload.performed_by = ownerId;
+        const retry1 = await supabase.from('barrel_movements').insert(movementPayload);
+        if (retry1.error) {
+          movementPayload.performed_by = null;
+          const retry2 = await supabase.from('barrel_movements').insert(movementPayload);
+          movError = retry2.error;
+        } else {
+          movError = null;
+        }
+      }
       if (movError) throw movError;
 
       const { data: barrelDoc } = await supabase.from('barrels').select('*').eq('id', barrelId).single();
