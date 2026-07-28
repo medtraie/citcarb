@@ -152,6 +152,89 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
               max={capacity}
               required 
             />
+            {/* Quick volume percentage presets */}
+            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentVolume(capacity)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: currentVolume === capacity ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: currentVolume === capacity ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                100% ({capacity}L)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentVolume(Math.round(capacity * 0.75))}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.75) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: currentVolume === Math.round(capacity * 0.75) ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                75% ({Math.round(capacity * 0.75)}L)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentVolume(Math.round(capacity * 0.5))}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.5) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: currentVolume === Math.round(capacity * 0.5) ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                50% ({Math.round(capacity * 0.5)}L)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentVolume(Math.round(capacity * 0.25))}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.25) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  color: currentVolume === Math.round(capacity * 0.25) ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                25% ({Math.round(capacity * 0.25)}L)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentVolume(0)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: currentVolume === 0 ? 'var(--accent-red)' : 'var(--bg-card)',
+                  color: currentVolume === 0 ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                0L (Vide)
+              </button>
+            </div>
           </div>
 
           <div className="form-group">

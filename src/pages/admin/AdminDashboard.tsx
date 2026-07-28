@@ -10,6 +10,7 @@ import { AddAgentDialog } from '../../components/forms/AddAgentDialog';
 import { EditTankDialog } from '../../components/forms/EditTankDialog';
 import { ConsumeDialog } from '../../components/barrels/ConsumeDialog';
 import { RefillDialog } from '../../components/barrels/RefillDialog';
+import { EditBarrelDialog } from '../../components/barrels/EditBarrelDialog';
 import { Barrel } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
@@ -23,6 +24,7 @@ export const AdminDashboard: React.FC = () => {
     fetchDashboardData, 
     loading,
     updateTank,
+    updateBarrel,
     deleteTank
   } = useDataStore();
 
@@ -32,6 +34,7 @@ export const AdminDashboard: React.FC = () => {
   const [editTankOpen, setEditTankOpen] = useState(false);
   const [selectedConsumeBarrel, setSelectedConsumeBarrel] = useState<Barrel | null>(null);
   const [selectedRefillBarrel, setSelectedRefillBarrel] = useState<Barrel | null>(null);
+  const [selectedEditBarrel, setSelectedEditBarrel] = useState<Barrel | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -205,6 +208,7 @@ export const AdminDashboard: React.FC = () => {
                 barrel={b} 
                 onConsume={() => setSelectedConsumeBarrel(b)}
                 onRefill={() => setSelectedRefillBarrel(b)}
+                onEdit={() => setSelectedEditBarrel(b)}
               />
             ))}
           </div>
@@ -307,6 +311,13 @@ export const AdminDashboard: React.FC = () => {
           onClose={() => setSelectedRefillBarrel(null)}
         />
       )}
+
+      <EditBarrelDialog
+        barrel={selectedEditBarrel}
+        isOpen={!!selectedEditBarrel}
+        onClose={() => setSelectedEditBarrel(null)}
+        onUpdate={updateBarrel}
+      />
 
       <AddAgentDialog 
         isOpen={addAgentOpen}
