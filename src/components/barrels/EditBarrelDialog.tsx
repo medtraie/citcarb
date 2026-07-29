@@ -31,6 +31,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
       setCurrentVolume(barrel.currentVolume);
       setAlertThreshold(barrel.alertThreshold);
       setUnit(barrel.unit || 'L');
+      setError(null);
     }
   }, [barrel]);
 
@@ -76,17 +77,14 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
   };
 
   return (
-    <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog-content" onClick={e => e.stopPropagation()}>
-        <div className="dialog-header">
-          <h2 className="dialog-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            Modifier le baril
-          </h2>
-          <button className="dialog-close" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} disabled={isSubmitting}>&times;</button>
+        
+        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Modifier le Baril
+        </h2>
 
         {error && (
           <div style={{
@@ -94,7 +92,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
             color: 'var(--accent-red)',
             padding: '0.75rem 1rem',
             borderRadius: '8px',
-            marginTop: '1rem',
+            marginBottom: '1rem',
             fontSize: '0.85rem',
             fontWeight: 500,
             border: '1px solid rgba(239, 68, 68, 0.2)'
@@ -103,14 +101,15 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.25rem' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
           <div className="form-group">
             <label className="form-label">Type de Baril</label>
             <select 
-              className="form-input" 
+              className="form-control" 
               value={type} 
               onChange={e => setType(e.target.value as BarrelType)}
+              disabled={isSubmitting}
             >
               <option value="hydraulique">Huile Hydraulique</option>
               <option value="motor_oil">Huile Moteur</option>
@@ -121,11 +120,12 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
             <label className="form-label">Nom du Baril</label>
             <input 
               type="text" 
-              className="form-input" 
+              className="form-control" 
               value={name} 
               onChange={e => setName(e.target.value)} 
               placeholder="Ex: Huile Hydraulique N°1"
               required 
+              disabled={isSubmitting}
             />
           </div>
 
@@ -133,11 +133,12 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
             <label className="form-label">Capacité Totale (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={capacity} 
               onChange={e => setCapacity(Number(e.target.value))} 
               min="1" 
               required 
+              disabled={isSubmitting}
             />
           </div>
 
@@ -145,12 +146,13 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
             <label className="form-label">Volume Actuel en Stock (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={currentVolume} 
               onChange={e => setCurrentVolume(Number(e.target.value))} 
               min="0"
               max={capacity}
               required 
+              disabled={isSubmitting}
             />
             {/* Quick volume percentage presets */}
             <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
@@ -161,7 +163,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
                   padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
-                  backgroundColor: currentVolume === capacity ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  backgroundColor: currentVolume === capacity ? 'var(--accent-cyan)' : 'var(--bg-input)',
                   color: currentVolume === capacity ? '#fff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -177,7 +179,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
                   padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
-                  backgroundColor: currentVolume === Math.round(capacity * 0.75) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.75) ? 'var(--accent-cyan)' : 'var(--bg-input)',
                   color: currentVolume === Math.round(capacity * 0.75) ? '#fff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -193,7 +195,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
                   padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
-                  backgroundColor: currentVolume === Math.round(capacity * 0.5) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.5) ? 'var(--accent-cyan)' : 'var(--bg-input)',
                   color: currentVolume === Math.round(capacity * 0.5) ? '#fff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -209,7 +211,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
                   padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
-                  backgroundColor: currentVolume === Math.round(capacity * 0.25) ? 'var(--accent-cyan)' : 'var(--bg-card)',
+                  backgroundColor: currentVolume === Math.round(capacity * 0.25) ? 'var(--accent-cyan)' : 'var(--bg-input)',
                   color: currentVolume === Math.round(capacity * 0.25) ? '#fff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -225,7 +227,7 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
                   padding: '4px 10px',
                   borderRadius: '6px',
                   border: '1px solid var(--border-color)',
-                  backgroundColor: currentVolume === 0 ? 'var(--accent-red)' : 'var(--bg-card)',
+                  backgroundColor: currentVolume === 0 ? 'var(--accent-red)' : 'var(--bg-input)',
                   color: currentVolume === 0 ? '#fff' : 'var(--text-secondary)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
@@ -241,16 +243,17 @@ export const EditBarrelDialog: React.FC<EditBarrelDialogProps> = ({
             <label className="form-label">Seuil d'alerte Stock Bas (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={alertThreshold} 
               onChange={e => setAlertThreshold(Number(e.target.value))} 
               min="0"
               max={capacity}
               required 
+              disabled={isSubmitting}
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
             <button 
               type="button" 
               className="btn btn-secondary" 

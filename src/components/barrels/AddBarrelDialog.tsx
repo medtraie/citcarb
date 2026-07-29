@@ -12,7 +12,7 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
   const [name, setName] = useState('');
   const [type, setType] = useState<BarrelType>('hydraulique');
   const [capacity, setCapacity] = useState<number>(200);
-  const [currentVolume, setCurrentVolume] = useState<number>(0);
+  const [currentVolume, setCurrentVolume] = useState<number>(150);
   const [alertThreshold, setAlertThreshold] = useState<number>(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,7 +25,7 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
     setIsSubmitting(true);
     try {
       await onAdd({
-        name,
+        name: name.trim(),
         type,
         capacity,
         currentVolume,
@@ -37,7 +37,7 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
       // Reset form
       setName('');
       setCapacity(200);
-      setCurrentVolume(0);
+      setCurrentVolume(150);
       setAlertThreshold(30);
     } catch (error) {
       console.error(error);
@@ -48,23 +48,24 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog-content" onClick={e => e.stopPropagation()}>
-        <div className="dialog-header">
-          <h2 className="dialog-title">Ajouter un nouveau baril</h2>
-          <button className="dialog-close" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} disabled={isSubmitting}>&times;</button>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
+        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Ajouter un nouveau baril
+        </h2>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
           <div className="form-group">
             <label className="form-label">Type de Baril</label>
             <select 
-              className="form-input" 
+              className="form-control" 
               value={type} 
               onChange={e => setType(e.target.value as BarrelType)}
+              disabled={isSubmitting}
             >
               <option value="hydraulique">Huile Hydraulique</option>
               <option value="motor_oil">Huile Moteur</option>
@@ -75,23 +76,25 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
             <label className="form-label">Nom du Baril</label>
             <input 
               type="text" 
-              className="form-input" 
+              className="form-control" 
               value={name} 
               onChange={e => setName(e.target.value)} 
               placeholder="Ex: Huile Hydraulique N°3"
               required 
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Capacité (L)</label>
+            <label className="form-label">CapacitéTotale (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={capacity} 
               onChange={e => setCapacity(Number(e.target.value))} 
               min="1" 
               required 
+              disabled={isSubmitting}
             />
           </div>
 
@@ -99,12 +102,13 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
             <label className="form-label">Volume Actuel (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={currentVolume} 
               onChange={e => setCurrentVolume(Number(e.target.value))} 
               min="0"
               max={capacity}
               required 
+              disabled={isSubmitting}
             />
           </div>
 
@@ -112,12 +116,13 @@ export const AddBarrelDialog: React.FC<AddBarrelDialogProps> = ({ isOpen, onClos
             <label className="form-label">Seuil d'alerte (L)</label>
             <input 
               type="number" 
-              className="form-input" 
+              className="form-control" 
               value={alertThreshold} 
               onChange={e => setAlertThreshold(Number(e.target.value))} 
               min="0"
               max={capacity}
               required 
+              disabled={isSubmitting}
             />
           </div>
 
