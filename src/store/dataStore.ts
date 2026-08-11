@@ -1239,7 +1239,21 @@ export const useDataStore = create<DataState>((set, get) => ({
         }
       }
 
-      const payload = {
+      // Ensure performed_by won't trigger FK violation in fuel_fills or database triggers
+      let safePerformedBy: string | null = performedBy;
+      if (safePerformedBy) {
+        try {
+          const { data: prof } = await supabase.from('profiles').select('id').eq('id', safePerformedBy).maybeSingle();
+          if (!prof) {
+            const { data: ownerProf } = await supabase.from('profiles').select('id').eq('id', ownerId).maybeSingle();
+            safePerformedBy = ownerProf ? ownerId : null;
+          }
+        } catch (_) {
+          safePerformedBy = null;
+        }
+      }
+
+      const payload: any = {
         id: fillId,
         vehicle_id: vehicleId,
         driver_id: driverId,
@@ -1251,12 +1265,23 @@ export const useDataStore = create<DataState>((set, get) => ({
         anomaly_type: anomalyType || null,
         notes: notes || null,
         photo_url: photoUrl || null,
-        performed_by: performedBy,
+        performed_by: safePerformedBy,
         owner_id: ownerId,
         created_at: nowStr,
       };
 
-      const { error } = await supabase.from('fuel_fills').insert(payload);
+      let { error } = await supabase.from('fuel_fills').insert(payload);
+      if (error && (error.message?.includes('performed_by_fkey') || error.code === '23503' || error.message?.includes('foreign key constraint'))) {
+        payload.performed_by = ownerId;
+        const retry1 = await supabase.from('fuel_fills').insert(payload);
+        if (retry1.error) {
+          payload.performed_by = null;
+          const retry2 = await supabase.from('fuel_fills').insert(payload);
+          error = retry2.error;
+        } else {
+          error = null;
+        }
+      }
       if (error) throw error;
 
       // Update vehicle mileage
