@@ -60,13 +60,16 @@ export const AdminDashboard: React.FC = () => {
   const activeVehiclesCount = vehicles.filter(v => v.status === 'active').length;
 
   const formatDate = (isoString: string) => {
+    if (!isoString) return '-';
     const date = new Date(isoString);
     return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    });
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(',', ' à');
   };
 
   const getVehicleLabel = (vehId: string) => {

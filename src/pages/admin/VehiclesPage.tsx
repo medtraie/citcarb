@@ -166,15 +166,24 @@ export const VehiclesPage: React.FC = () => {
     return 'Hors Service';
   };
 
+  const transportVehicles = vehicles.filter(v => !v.type?.toLowerCase().includes('engin'));
+  const enginVehicles = vehicles.filter(v => v.type?.toLowerCase().includes('engin'));
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Liste de la flotte ({vehicles.length} véhicules)
-        </h2>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          + Ajouter un Véhicule
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+            Gestion de la Flotte & Engins de Chantier
+          </h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Total: {vehicles.length} véhicules et engins enregistrés
+          </span>
+        </div>
+        <button className="btn btn-primary" onClick={openAddModal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Ajouter un Véhicule / Engin
         </button>
       </div>
 
@@ -182,63 +191,148 @@ export const VehiclesPage: React.FC = () => {
         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Chargement...</div>
       ) : vehicles.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-          Aucun véhicule enregistré. Cliquez sur "+ Ajouter un Véhicule" pour commencer.
+          Aucun véhicule ou engin enregistré. Cliquez sur "+ Ajouter un Véhicule / Engin" pour commencer.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Immatriculation</th>
-                <th>Marque & Modèle</th>
-                <th>Catégorie</th>
-                <th>Kilométrage</th>
-                <th>Cons. Moy.</th>
-                <th>Chauffeur</th>
-                <th>Statut</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vehicles.map(v => (
-                <tr key={v.id}>
-                  <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{v.plateNumber}</td>
-                  <td style={{ fontWeight: 600 }}>{v.brand} {v.model} ({v.year})</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{v.type === 'Fourgon' ? 'Engins' : v.type}</td>
-                  <td>{v.currentMileage.toLocaleString()} km</td>
-                  <td>{v.avgConsumption} L/100km</td>
-                  <td>{getDriverName(v.driverId)}</td>
-                  <td>
-                    <span className={getStatusBadgeClass(v.status)}>
-                      {getStatusLabel(v.status)}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
-                      onClick={() => openEditModal(v)}
-                    >
-                      Modifier
-                    </button>
-                    <button 
-                      className="btn btn-danger" 
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      title="Supprimer ce véhicule"
-                      onClick={() => {
-                        if (window.confirm(`Êtes-vous sûr de vouloir supprimer le véhicule ${v.plateNumber} ?`)) {
-                          deleteVehicle(v.id, user!.ownerId);
-                        }
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Table 1: Flotte de Transport (Voitures, Camionettes, Camions, etc.) */}
+          <div className="card" style={{ padding: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              Flotte de Transport & Véhicules ({transportVehicles.length})
+            </h3>
+            
+            {transportVehicles.length === 0 ? (
+              <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Aucun véhicule de transport enregistré.
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Immatriculation</th>
+                      <th>Marque & Modèle</th>
+                      <th>Catégorie</th>
+                      <th>Kilométrage</th>
+                      <th>Cons. Moy. (L/100km)</th>
+                      <th>Chauffeur</th>
+                      <th>Statut</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transportVehicles.map(v => (
+                      <tr key={v.id}>
+                        <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{v.plateNumber}</td>
+                        <td style={{ fontWeight: 600 }}>{v.brand} {v.model} ({v.year})</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{v.type}</td>
+                        <td>{v.currentMileage.toLocaleString()} km</td>
+                        <td style={{ fontWeight: 600 }}>{v.avgConsumption} L/100km</td>
+                        <td>{getDriverName(v.driverId)}</td>
+                        <td>
+                          <span className={getStatusBadgeClass(v.status)}>
+                            {getStatusLabel(v.status)}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                            onClick={() => openEditModal(v)}
+                          >
+                            Modifier
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            title="Supprimer ce véhicule"
+                            onClick={() => {
+                              if (window.confirm(`Êtes-vous sûr de vouloir supprimer le véhicule ${v.plateNumber} ?`)) {
+                                deleteVehicle(v.id, user!.ownerId);
+                              }
+                            }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Table 2: Engins & Équipements de Chantier (Consommation en Litres par jour L/j) */}
+          <div className="card" style={{ padding: '1.25rem', borderTop: '3px solid var(--accent-orange)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-orange)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              Engins & Équipements de Chantier ({enginVehicles.length})
+            </h3>
+            
+            {enginVehicles.length === 0 ? (
+              <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Aucun engin de chantier enregistré.
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Identification / Matricule</th>
+                      <th>Marque & Modèle</th>
+                      <th>Catégorie</th>
+                      <th>Heures de Travail</th>
+                      <th>Cons. Moy. (L/j)</th>
+                      <th>Conducteur / Opérateur</th>
+                      <th>Statut</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enginVehicles.map(v => (
+                      <tr key={v.id}>
+                        <td style={{ fontWeight: 700, color: 'var(--accent-orange)' }}>{v.plateNumber}</td>
+                        <td style={{ fontWeight: 600 }}>{v.brand} {v.model} ({v.year})</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>Engins</td>
+                        <td style={{ fontWeight: 600 }}>{v.currentMileage.toLocaleString()} h</td>
+                        <td style={{ fontWeight: 700, color: 'var(--accent-orange)' }}>{v.avgConsumption} L/j</td>
+                        <td>{getDriverName(v.driverId)}</td>
+                        <td>
+                          <span className={getStatusBadgeClass(v.status)}>
+                            {getStatusLabel(v.status)}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                            onClick={() => openEditModal(v)}
+                          >
+                            Modifier
+                          </button>
+                          <button 
+                            className="btn btn-danger" 
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            title="Supprimer cet engin"
+                            onClick={() => {
+                              if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'engin ${v.plateNumber} ?`)) {
+                                deleteVehicle(v.id, user!.ownerId);
+                              }
+                            }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Add/Edit Modal */}
@@ -247,7 +341,7 @@ export const VehiclesPage: React.FC = () => {
           <div className="modal-content">
             <button className="modal-close" onClick={() => setModalOpen(false)}>&times;</button>
             
-            <h2>{editingVehicle ? 'Modifier le Véhicule' : 'Nouveau Véhicule'}</h2>
+            <h2>{editingVehicle ? 'Modifier le Véhicule / Engin' : 'Nouveau Véhicule / Engin'}</h2>
             
             {error && (
               <div style={{
@@ -265,11 +359,11 @@ export const VehiclesPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
               <div className="form-group">
-                <label className="form-label">Numéro d'immatriculation</label>
+                <label className="form-label">Numéro d'immatriculation / Identification</label>
                 <input 
                   type="text" 
                   className="form-control"
-                  placeholder="Ex: 12345-A-10"
+                  placeholder="Ex: 12345-A-10 ou ENG-01"
                   value={plateNumber}
                   onChange={(e) => setPlateNumber(e.target.value)}
                   required
@@ -282,7 +376,7 @@ export const VehiclesPage: React.FC = () => {
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="Ex: Dacia, Renault"
+                    placeholder="Ex: CAT, Dacia, JCB"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
                     required
@@ -293,7 +387,7 @@ export const VehiclesPage: React.FC = () => {
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="Ex: Logan, Master"
+                    placeholder="Ex: 320D, Logan, Master"
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
                     required
@@ -351,22 +445,26 @@ export const VehiclesPage: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Kilométrage actuel (km)</label>
+                  <label className="form-label">
+                    {type === 'Engins' ? "Heures d'utilisation / Compteur (h)" : "Kilométrage actuel (km)"}
+                  </label>
                   <input 
                     type="number" 
                     className="form-control"
-                    placeholder="Ex: 85000"
+                    placeholder={type === 'Engins' ? "Ex: 4500 h" : "Ex: 85000"}
                     value={currentMileage}
                     onChange={(e) => setCurrentMileage(e.target.value)}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Consommation moy. (L/100km)</label>
+                  <label className="form-label">
+                    {type === 'Engins' ? "Consommation moy. (L/j)" : "Consommation moy. (L/100km)"}
+                  </label>
                   <input 
                     type="number" 
                     className="form-control"
-                    placeholder="Ex: 6.5"
+                    placeholder={type === 'Engins' ? "Ex: 85 (Litres par jour)" : "Ex: 6.5"}
                     step="0.1"
                     value={avgConsumption}
                     onChange={(e) => setAvgConsumption(e.target.value)}

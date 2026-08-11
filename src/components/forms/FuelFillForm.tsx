@@ -14,10 +14,17 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
   const { user } = useAuthStore();
   const { vehicles, drivers, fetchVehicles, fetchDrivers, addFuelFill, tank } = useDataStore();
 
+  const getNowDateTimeLocal = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  };
+
   const [vehicleId, setVehicleId] = useState('');
   const [driverId, setDriverId] = useState('');
   const [quantity, setQuantity] = useState('');
   const [mileage, setMileage] = useState('');
+  const [fillDateTime, setFillDateTime] = useState(getNowDateTimeLocal());
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +35,9 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
       fetchDrivers(user.ownerId);
     }
   }, [user]);
+
+  const selectedVehicle = vehicles.find(v => v.id === vehicleId);
+  const isEngin = selectedVehicle?.type?.toLowerCase().includes('engin');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +57,16 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
       return;
     }
 
-    if (isNaN(mil) || mil <= 0) {
-      setError('Veuillez entrer un kilométrage valide.');
+    if (isNaN(mil) || mil < 0) {
+      setError(isEngin ? 'Veuillez entrer un nombre d\'heures valide.' : 'Veuillez entrer un kilométrage valide.');
       return;
     }
 
-    const selectedVehicle = vehicles.find(v => v.id === vehicleId);
     if (selectedVehicle && mil <= selectedVehicle.currentMileage) {
-      setError(`Le kilométrage saisi (${mil} km) doit être supérieur au kilométrage actuel du véhicule (${selectedVehicle.currentMileage} km).`);
+      setError(isEngin 
+        ? `Les heures saisies (${mil} h) doivent être supérieures aux heures actuelles de l'engin (${selectedVehicle.currentMileage} h).`
+        : `Le kilométrage saisi (${mil} km) doit être supérieur au kilométrage actuel du véhicule (${selectedVehicle.currentMileage} km).`
+      );
       return;
     }
 
@@ -67,7 +79,8 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
         mileage: mil,
         notes: notes.trim() || undefined,
         performedBy: user.id,
-        ownerId: user.ownerId
+        ownerId: user.ownerId,
+        createdAt: fillDateTime ? new Date(fillDateTime).toISOString() : undefined,
       });
       onSuccess();
     } catch (err: any) {
@@ -103,37 +116,48 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
       )}
 
       <div className="form-group">
-        <label className="form-label">Véhicule</label>
+        <label className="form-label">Véhicule / Engin</label>
         <select 
           className="form-control"
           value={vehicleId}
           onChange={(e) => setVehicleId(e.target.value)}
           required
         >
-          <option value="">-- Sélectionner le véhicule --</option>
+          <option value="">-- Sélectionner le véhicule ou engin --</option>
           {activeVehicles.map(v => (
             <option key={v.id} value={v.id}>
-              {v.brand} {v.model} ({v.plateNumber})
+              {v.brand} {v.model} ({v.plateNumber}) - {v.type}
             </option>
           ))}
         </select>
       </div>
 
       <div className="form-group">
-        <label className="form-label">Chauffeur</label>
+        <label className="form-label">Chauffeur / Opérateur</label>
         <select 
           className="form-control"
           value={driverId}
           onChange={(e) => setDriverId(e.target.value)}
           required
         >
-          <option value="">-- Sélectionner le chauffeur --</option>
+          <option value="">-- Sélectionner le chauffeur / conducteur --</option>
           {activeDrivers.map(d => (
             <option key={d.id} value={d.id}>
               {d.fullName} (CIN: {d.cin})
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Date et Heure du plein</label>
+        <input 
+          type="datetime-local" 
+          className="form-control"
+          value={fillDateTime}
+          onChange={(e) => setFillDateTime(e.target.value)}
+          required
+        />
       </div>
 
       <div className="form-group">
@@ -151,19 +175,23 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
       </div>
 
       <div className="form-group">
-        <label className="form-label">Kilométrage actuel (km)</label>
+        <label className="form-label">
+          {isEngin ? "Heures d'utilisation / Compteur (h)" : "Kilométrage actuel (km)"}
+        </label>
         <input 
           type="number" 
           className="form-control"
-          placeholder="Kilométrage du compteur"
+          placeholder={isEngin ? "Nombre d'heures au compteur (Ex: 4500 h)" : "Kilométrage du compteur (Ex: 85000 km)"}
           min="1"
           value={mileage}
           onChange={(e) => setMileage(e.target.value)}
           required
         />
-        {vehicleId && vehicles.find(v => v.id === vehicleId) && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Dernier kilométrage enregistré: {vehicles.find(v => v.id === vehicleId)?.currentMileage} km
+        {selectedVehicle && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+            {isEngin 
+              ? `Dernières heures enregistrées: ${selectedVehicle.currentMileage} h`
+              : `Dernier kilométrage enregistré: ${selectedVehicle.currentMileage} km`}
           </span>
         )}
       </div>

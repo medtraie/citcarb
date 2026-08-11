@@ -67,6 +67,7 @@ interface DataState {
     vehicleId?: string;
     performedBy: string;
     ownerId: string;
+    createdAt?: string;
   }) => Promise<void>;
 
   // Fuel fills
@@ -80,6 +81,7 @@ interface DataState {
     photoUrl?: string;
     performedBy: string;
     ownerId: string;
+    createdAt?: string;
   }) => Promise<void>;
 
   // Notifications
@@ -1001,8 +1003,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
-  consumeFromBarrel: async ({ barrelId, quantity, notes, vehicleId, performedBy, ownerId }) => {
-    const nowStr = new Date().toISOString();
+  consumeFromBarrel: async ({ barrelId, quantity, notes, vehicleId, performedBy, ownerId, createdAt }) => {
+    const nowStr = createdAt || new Date().toISOString();
     const movId = generateUUID();
 
     if (ownerId === 'demo_admin_uid') {
@@ -1156,8 +1158,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
-  addFuelFill: async ({ vehicleId, driverId, quantity, mileage, notes, photoUrl, performedBy, ownerId }) => {
-    const nowStr = new Date().toISOString();
+  addFuelFill: async ({ vehicleId, driverId, quantity, mileage, notes, photoUrl, performedBy, ownerId, createdAt }) => {
+    const nowStr = createdAt || new Date().toISOString();
     const fillId = generateUUID();
 
     if (ownerId === 'demo_admin_uid') {

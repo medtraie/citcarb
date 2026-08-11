@@ -23,9 +23,16 @@ export const ConsumeDialog: React.FC<ConsumeDialogProps> = ({
     consumeFromBarrel 
   } = useDataStore();
 
+  const getNowDateTimeLocal = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  };
+
   const [vehicleId, setVehicleId] = useState('');
   const [driverId, setDriverId] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [consumeDateTime, setConsumeDateTime] = useState(getNowDateTimeLocal());
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +82,7 @@ export const ConsumeDialog: React.FC<ConsumeDialogProps> = ({
         performedBy: user.id,
         ownerId: user.ownerId,
         notes: notes.trim() || undefined,
+        createdAt: consumeDateTime ? new Date(consumeDateTime).toISOString() : undefined,
       });
       onClose();
       // Reset form
@@ -99,7 +107,7 @@ export const ConsumeDialog: React.FC<ConsumeDialogProps> = ({
         
         <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          Consommer l'huile
+          Consommer l'huile / fluide
         </h2>
         
         <div style={{
@@ -110,7 +118,7 @@ export const ConsumeDialog: React.FC<ConsumeDialogProps> = ({
           fontSize: '0.9rem',
           borderLeft: '4px solid var(--accent-orange)'
         }}>
-          <strong>Baril:</strong> {barrel.name} <br/>
+          <strong>Baril:</strong> {barrel.name} ({barrel.type === 'hydraulique' ? 'Hydraulique' : 'Huile Moteur'})<br/>
           <strong>Quantité restante:</strong> {barrel.currentVolume} / {barrel.capacity} L
         </div>
 
@@ -131,37 +139,48 @@ export const ConsumeDialog: React.FC<ConsumeDialogProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Véhicule</label>
+            <label className="form-label">Véhicule / Engin Destinataire</label>
             <select 
               className="form-control"
               value={vehicleId}
               onChange={(e) => setVehicleId(e.target.value)}
               required
             >
-              <option value="">-- Sélectionner un véhicule --</option>
+              <option value="">-- Sélectionner un véhicule ou engin --</option>
               {activeVehicles.map(v => (
                 <option key={v.id} value={v.id}>
-                  {v.brand} {v.model} ({v.plateNumber})
+                  {v.brand} {v.model} ({v.plateNumber}) - {v.type}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Chauffeur</label>
+            <label className="form-label">Chauffeur / Opérateur</label>
             <select 
               className="form-control"
               value={driverId}
               onChange={(e) => setDriverId(e.target.value)}
               required
             >
-              <option value="">-- Sélectionner un chauffeur --</option>
+              <option value="">-- Sélectionner un chauffeur / conducteur --</option>
               {activeDrivers.map(d => (
                 <option key={d.id} value={d.id}>
                   {d.fullName} (CIN: {d.cin})
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Date et Heure de consommation</label>
+            <input 
+              type="datetime-local" 
+              className="form-control"
+              value={consumeDateTime}
+              onChange={(e) => setConsumeDateTime(e.target.value)}
+              required
+            />
           </div>
 
           <div className="form-group">
