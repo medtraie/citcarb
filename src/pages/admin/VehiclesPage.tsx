@@ -23,7 +23,8 @@ export const VehiclesPage: React.FC = () => {
   const [plateNumber, setPlateNumber] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
-  const [type, setType] = useState('Fourgon');
+  const [type, setType] = useState('Camionette');
+  const [tonnage, setTonnage] = useState('3.5');
   const [year, setYear] = useState(new Date().getFullYear());
   const [currentMileage, setCurrentMileage] = useState('');
   const [avgConsumption, setAvgConsumption] = useState('');
@@ -45,7 +46,8 @@ export const VehiclesPage: React.FC = () => {
     setPlateNumber('');
     setBrand('');
     setModel('');
-    setType('Fourgon');
+    setType('Camionette');
+    setTonnage('3.5');
     setYear(new Date().getFullYear());
     setCurrentMileage('');
     setAvgConsumption('');
@@ -60,7 +62,23 @@ export const VehiclesPage: React.FC = () => {
     setPlateNumber(v.plateNumber);
     setBrand(v.brand);
     setModel(v.model);
-    setType(v.type);
+    
+    // Parse category and tonnage e.g. "Camionette (3.5T)" or "Fourgon" -> "Engins"
+    let parsedType = v.type || 'Camionette';
+    let parsedTonnage = '3.5';
+    if (parsedType === 'Fourgon') parsedType = 'Engins';
+    
+    if (parsedType.includes('(') && parsedType.includes('T)')) {
+      const match = parsedType.match(/(.*?)\s*\(([\d.]+)T\)/i);
+      if (match) {
+        parsedType = match[1].trim();
+        parsedTonnage = match[2];
+      }
+    } else if (v.tonnage) {
+      parsedTonnage = v.tonnage.toString();
+    }
+    setType(parsedType);
+    setTonnage(parsedTonnage);
     setYear(v.year);
     setCurrentMileage(v.currentMileage.toString());
     setAvgConsumption(v.avgConsumption.toString());
@@ -88,6 +106,9 @@ export const VehiclesPage: React.FC = () => {
       return;
     }
 
+    const finalType = (type === 'Camionette' || type === 'Camion') ? `${type} (${tonnage}T)` : type;
+    const tonnageNum = (type === 'Camionette' || type === 'Camion') ? parseFloat(tonnage) : undefined;
+
     setSubmitting(true);
     try {
       if (editingVehicle) {
@@ -96,7 +117,8 @@ export const VehiclesPage: React.FC = () => {
           plateNumber,
           brand,
           model,
-          type,
+          type: finalType,
+          tonnage: tonnageNum,
           year,
           currentMileage: mileageNum,
           avgConsumption: consNum,
@@ -108,7 +130,8 @@ export const VehiclesPage: React.FC = () => {
           plateNumber,
           brand,
           model,
-          type,
+          type: finalType,
+          tonnage: tonnageNum,
           year,
           currentMileage: mileageNum,
           avgConsumption: consNum,
@@ -168,7 +191,7 @@ export const VehiclesPage: React.FC = () => {
               <tr>
                 <th>Immatriculation</th>
                 <th>Marque & Modèle</th>
-                <th>Type</th>
+                <th>Catégorie</th>
                 <th>Kilométrage</th>
                 <th>Cons. Moy.</th>
                 <th>Chauffeur</th>
@@ -181,7 +204,7 @@ export const VehiclesPage: React.FC = () => {
                 <tr key={v.id}>
                   <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>{v.plateNumber}</td>
                   <td style={{ fontWeight: 600 }}>{v.brand} {v.model} ({v.year})</td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{v.type}</td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{v.type === 'Fourgon' ? 'Engins' : v.type}</td>
                   <td>{v.currentMileage.toLocaleString()} km</td>
                   <td>{v.avgConsumption} L/100km</td>
                   <td>{getDriverName(v.driverId)}</td>
@@ -278,9 +301,9 @@ export const VehiclesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: (type === 'Camionette' || type === 'Camion') ? '1fr 1fr 1fr' : '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Type</label>
+                  <label className="form-label">Catégories</label>
                   <select 
                     className="form-control"
                     value={type}
@@ -289,10 +312,29 @@ export const VehiclesPage: React.FC = () => {
                   >
                     <option value="Voiture">Voiture</option>
                     <option value="Camionette">Camionette</option>
-                    <option value="Fourgon">Fourgon</option>
                     <option value="Camion">Camion</option>
+                    <option value="Engins">Engins</option>
+                    <option value="Autre">Autre</option>
                   </select>
                 </div>
+
+                {(type === 'Camionette' || type === 'Camion') && (
+                  <div className="form-group">
+                    <label className="form-label">Tonnage (Tonne)</label>
+                    <select 
+                      className="form-control"
+                      value={tonnage}
+                      onChange={(e) => setTonnage(e.target.value)}
+                      required
+                    >
+                      <option value="3.5">3.5 Tonnes</option>
+                      <option value="7">7 Tonnes</option>
+                      <option value="10">10 Tonnes</option>
+                      <option value="14">14 Tonnes</option>
+                    </select>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label">Année de mise en circulation</label>
                   <input 

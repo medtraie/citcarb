@@ -23,7 +23,8 @@ export interface Vehicle {
   plateNumber: string;
   brand: string;
   model: string;
-  type: string; // 'truck', 'car', 'van', etc.
+  type: string; // Category: 'Voiture', 'Camionette', 'Camion', 'Engins', 'Autre'
+  tonnage?: number; // 3.5, 7, 10, 14
   year: number;
   currentMileage: number;
   avgConsumption: number; // L/100km théorique

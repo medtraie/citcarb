@@ -80,18 +80,21 @@ export const ActiveAnalyticsPage: React.FC = () => {
 
   // 3. Vehicle Category Pie Data (REAL from Vehicles & Fills)
   const categoryColors: Record<string, string> = {
-    'Fourgon': '#00B4DB',
+    'Voiture': '#a855f7',
     'Camionette': '#00B4DB',
     'Camion': '#20C997',
+    'Engins': '#FD7E14',
     'Engin': '#FD7E14',
-    'Voiture': '#a855f7',
+    'Fourgon': '#00B4DB',
+    'Autre': '#eab308',
   };
 
   const typeVolumes: Record<string, number> = {};
   vehicles.forEach(v => {
     const vFills = fuelFills.filter(f => f.vehicleId === v.id);
     const vol = vFills.reduce((sum, f) => sum + (f.quantity || 0), 0);
-    const catName = v.type || 'Autre';
+    const rawType = v.type === 'Fourgon' ? 'Engins' : (v.type || 'Autre');
+    const catName = rawType.split('(')[0].trim();
     typeVolumes[catName] = (typeVolumes[catName] || 0) + vol;
   });
 
@@ -105,9 +108,9 @@ export const ActiveAnalyticsPage: React.FC = () => {
       }))
     : (vehicles.length > 0
         ? [
-            { name: 'Fourgons / Utilitaires', value: Math.round((vehicles.filter(v => (v.type || '').includes('Fourgon') || (v.type || '').includes('Camionette')).length / vehicles.length) * 100) || 50, color: '#00B4DB' },
-            { name: 'Camions Poids Lourds', value: Math.round((vehicles.filter(v => (v.type || '').includes('Camion')).length / vehicles.length) * 100) || 30, color: '#20C997' },
-            { name: 'Engins de Chantier', value: Math.round((vehicles.filter(v => (v.type || '').includes('Engin')).length / vehicles.length) * 100) || 20, color: '#FD7E14' },
+            { name: 'Camionettes', value: Math.round((vehicles.filter(v => (v.type || '').includes('Camionette')).length / vehicles.length) * 100) || 40, color: '#00B4DB' },
+            { name: 'Camions', value: Math.round((vehicles.filter(v => (v.type || '').includes('Camion')).length / vehicles.length) * 100) || 30, color: '#20C997' },
+            { name: 'Engins', value: Math.round((vehicles.filter(v => (v.type || '').includes('Engin') || (v.type || '').includes('Fourgon')).length / vehicles.length) * 100) || 30, color: '#FD7E14' },
           ]
         : [{ name: 'Aucun véhicule', value: 100, color: '#64748B' }]);
 
