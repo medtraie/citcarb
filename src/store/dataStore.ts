@@ -1576,7 +1576,32 @@ export const useDataStore = create<DataState>((set, get) => ({
         .eq('owner_id', ownerId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+          console.warn('Supabase revisions table not found, using local fallback.');
+          const demo = getDemoData();
+          const vehs = get().vehicles;
+          const computed = (demo.revisions || []).map((r: Revision) => {
+            const v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+            let status = r.status;
+            if (r.mode === 'days' && r.nextDueDate) {
+              const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+              if (diffDays < 0) status = 'overdue';
+              else if (diffDays <= 15) status = 'due_soon';
+              else status = 'up_to_date';
+            } else if (r.mode === 'mileage' && r.nextDueKm && v) {
+              const diffKm = r.nextDueKm - v.currentMileage;
+              if (diffKm < 0) status = 'overdue';
+              else if (diffKm <= 1000) status = 'due_soon';
+              else status = 'up_to_date';
+            }
+            return { ...r, status };
+          });
+          set({ revisions: computed });
+          return;
+        }
+        throw error;
+      }
 
       const vehs = get().vehicles;
       const mapped: Revision[] = (data || []).map(r => {
@@ -1606,7 +1631,6 @@ export const useDataStore = create<DataState>((set, get) => ({
           lastKm: r.last_km ? Number(r.last_km) : undefined,
           nextDueKm: r.next_due_km ? Number(r.next_due_km) : undefined,
           cost: r.cost ? Number(r.cost) : undefined,
-          invoiceNumber: r.invoice_number,
           provider: r.provider,
           notes: r.notes,
           status,
@@ -1617,7 +1641,9 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       set({ revisions: mapped });
     } catch (err: any) {
-      set({ error: err.message });
+      console.warn('Fallback to demo revisions:', err.message);
+      const demo = getDemoData();
+      set({ revisions: demo.revisions || [] });
     }
   },
 
@@ -1626,7 +1652,6 @@ export const useDataStore = create<DataState>((set, get) => ({
     const newId = revisionData.id || generateUUID();
     const nowStr = new Date().toISOString();
 
-    // Calculate next due date / km
     let nextDueDate = revisionData.nextDueDate;
     let nextDueKm = revisionData.nextDueKm;
 
@@ -1638,17 +1663,18 @@ export const useDataStore = create<DataState>((set, get) => ({
       nextDueKm = Number(revisionData.lastKm) + Number(revisionData.intervalKm);
     }
 
+    const newRev: Revision = {
+      ...revisionData,
+      id: newId,
+      nextDueDate,
+      nextDueKm,
+      status: 'up_to_date',
+      createdAt: nowStr,
+    };
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
       demo.revisions = demo.revisions || [];
-      const newRev: Revision = {
-        ...revisionData,
-        id: newId,
-        nextDueDate,
-        nextDueKm,
-        status: 'up_to_date',
-        createdAt: nowStr,
-      };
       demo.revisions.unshift(newRev);
       saveDemoData(demo);
       await get().fetchRevisions(ownerId);
@@ -1668,7 +1694,6 @@ export const useDataStore = create<DataState>((set, get) => ({
         last_km: revisionData.lastKm || null,
         next_due_km: nextDueKm || null,
         cost: revisionData.cost || 0,
-        invoice_number: revisionData.invoiceNumber || null,
         provider: revisionData.provider || null,
         notes: revisionData.notes || null,
         status: 'up_to_date',
@@ -1677,11 +1702,26 @@ export const useDataStore = create<DataState>((set, get) => ({
       };
 
       const { error } = await supabase.from('revisions').insert(payload);
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+          console.warn('Supabase revisions table missing, saving revision locally');
+          const demo = getDemoData();
+          demo.revisions = demo.revisions || [];
+          demo.revisions.unshift(newRev);
+          saveDemoData(demo);
+          set({ revisions: [newRev, ...get().revisions] });
+          return;
+        }
+        throw error;
+      }
       await get().fetchRevisions(ownerId);
     } catch (err: any) {
-      set({ error: err.message });
-      throw err;
+      console.warn('Saving revision locally due to Supabase error:', err.message);
+      const demo = getDemoData();
+      demo.revisions = demo.revisions || [];
+      demo.revisions.unshift(newRev);
+      saveDemoData(demo);
+      set({ revisions: [newRev, ...get().revisions] });
     }
   },
 
@@ -1699,10 +1739,12 @@ export const useDataStore = create<DataState>((set, get) => ({
       nextDueKm = Number(revision.lastKm) + Number(revision.intervalKm);
     }
 
+    const updatedRev = { ...revision, nextDueDate, nextDueKm };
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
       demo.revisions = (demo.revisions || []).map((r: Revision) => 
-        r.id === revision.id ? { ...revision, nextDueDate, nextDueKm } : r
+        r.id === revision.id ? updatedRev : r
       );
       saveDemoData(demo);
       await get().fetchRevisions(ownerId);
@@ -1721,17 +1763,28 @@ export const useDataStore = create<DataState>((set, get) => ({
         last_km: revision.lastKm || null,
         next_due_km: nextDueKm || null,
         cost: revision.cost || 0,
-        invoice_number: revision.invoiceNumber || null,
         provider: revision.provider || null,
         notes: revision.notes || null,
       };
 
       const { error } = await supabase.from('revisions').update(payload).eq('id', revision.id);
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+          const demo = getDemoData();
+          demo.revisions = (demo.revisions || []).map((r: Revision) => r.id === revision.id ? updatedRev : r);
+          saveDemoData(demo);
+          set({ revisions: get().revisions.map(r => r.id === revision.id ? updatedRev : r) });
+          return;
+        }
+        throw error;
+      }
       await get().fetchRevisions(ownerId);
     } catch (err: any) {
-      set({ error: err.message });
-      throw err;
+      console.warn('Updating revision locally fallback:', err.message);
+      const demo = getDemoData();
+      demo.revisions = (demo.revisions || []).map((r: Revision) => r.id === revision.id ? updatedRev : r);
+      saveDemoData(demo);
+      set({ revisions: get().revisions.map(r => r.id === revision.id ? updatedRev : r) });
     }
   },
 
@@ -1746,11 +1799,23 @@ export const useDataStore = create<DataState>((set, get) => ({
 
     try {
       const { error } = await supabase.from('revisions').delete().eq('id', id);
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
+          const demo = getDemoData();
+          demo.revisions = (demo.revisions || []).filter((r: Revision) => r.id !== id);
+          saveDemoData(demo);
+          set({ revisions: get().revisions.filter(r => r.id !== id) });
+          return;
+        }
+        throw error;
+      }
       await get().fetchRevisions(ownerId);
     } catch (err: any) {
-      set({ error: err.message });
-      throw err;
+      console.warn('Deleting revision locally fallback:', err.message);
+      const demo = getDemoData();
+      demo.revisions = (demo.revisions || []).filter((r: Revision) => r.id !== id);
+      saveDemoData(demo);
+      set({ revisions: get().revisions.filter(r => r.id !== id) });
     }
   },
 

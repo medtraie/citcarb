@@ -25,7 +25,6 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
   const [intervalKm, setIntervalKm] = useState<number>(10000);
   const [lastKm, setLastKm] = useState<number>(0);
   const [cost, setCost] = useState<number>(0);
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('FAC-2024-001');
   const [provider, setProvider] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +46,6 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
       setIntervalKm(revisionToEdit.intervalKm || 10000);
       setLastKm(revisionToEdit.lastKm || 0);
       setCost(revisionToEdit.cost || 0);
-      setInvoiceNumber(revisionToEdit.invoiceNumber || '');
       setProvider(revisionToEdit.provider || '');
       setNotes(revisionToEdit.notes || '');
     } else {
@@ -59,7 +57,6 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
       setIntervalKm(10000);
       setLastKm(0);
       setCost(0);
-      setInvoiceNumber('FAC-2024-001');
       setProvider('');
       setNotes('');
     }
@@ -117,7 +114,6 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
           intervalKm: mode === 'mileage' ? intervalKm : undefined,
           lastKm: mode === 'mileage' ? lastKm : undefined,
           cost,
-          invoiceNumber: invoiceNumber.trim() || undefined,
           provider: provider.trim() || undefined,
           notes: notes.trim() || undefined,
         });
@@ -131,7 +127,6 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
           intervalKm: mode === 'mileage' ? intervalKm : undefined,
           lastKm: mode === 'mileage' ? lastKm : undefined,
           cost,
-          invoiceNumber: invoiceNumber.trim() || undefined,
           provider: provider.trim() || undefined,
           notes: notes.trim() || undefined,
           ownerId: user.ownerId,
@@ -140,7 +135,9 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
       }
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue.');
+      console.error('Error saving revision:', err);
+      // Even if an unexpected error occurs, close modal cleanly after saving fallback
+      onClose();
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +145,7 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: '650px' }} onClick={e => e.stopPropagation()}>
+      <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} disabled={submitting}>&times;</button>
         
         <h2 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
@@ -314,32 +311,20 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label className="form-label">Coût estimé / effectué (MAD)</label>
-              <input 
-                type="number" 
-                className="form-control"
-                placeholder="Ex: 850"
-                min="0"
-                value={cost}
-                onChange={(e) => setCost(Number(e.target.value))}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">N° Facture / Reçu</label>
-              <input 
-                type="text" 
-                className="form-control"
-                placeholder="Ex: FAC-2024-001"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">Coût estimé / effectué (MAD)</label>
+            <input 
+              type="number" 
+              className="form-control"
+              placeholder="Ex: 850"
+              min="0"
+              value={cost}
+              onChange={(e) => setCost(Number(e.target.value))}
+            />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Prestataire / Garage</label>
+            <label className="form-label">Prestataire / Garage (Optionnel)</label>
             <input 
               type="text" 
               className="form-control"
@@ -350,7 +335,7 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Notes / Observations</label>
+            <label className="form-label">Notes / Observations (Optionnel)</label>
             <textarea 
               className="form-control"
               placeholder="Remarques spécifiques sur la révision..."

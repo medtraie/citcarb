@@ -24,6 +24,11 @@ export const RevisionsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [revisionToEdit, setRevisionToEdit] = useState<Revision | null>(null);
 
+  // Analytics Interactive Controls
+  const [analyticsVehicleFilter, setAnalyticsVehicleFilter] = useState<string>('all');
+  const [analyticsTypeFilter, setAnalyticsTypeFilter] = useState<string>('all');
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<string>('all');
+
   // Calendar State
   const [calendarDate, setCalendarDate] = useState(new Date(2026, 7, 1)); // August 2026
 
@@ -95,7 +100,7 @@ export const RevisionsPage: React.FC = () => {
     return v ? v.currentMileage : 0;
   };
 
-  // Filter revisions
+  // Filter revisions for List
   const filteredRevisions = revisions.filter(r => {
     const vehicleName = getVehicleLabel(r.vehicleId).toLowerCase();
     const matchesSearch = vehicleName.includes(searchTerm.toLowerCase()) || (r.provider || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -104,15 +109,30 @@ export const RevisionsPage: React.FC = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  // Analytics Filtered Revisions
+  const analyticsRevisions = revisions.filter(r => {
+    const matchesVeh = analyticsVehicleFilter === 'all' || r.vehicleId === analyticsVehicleFilter;
+    const matchesType = analyticsTypeFilter === 'all' || r.type === analyticsTypeFilter;
+    return matchesVeh && matchesType;
+  });
+
+  // Analytics Math
+  const analyticsTotalCost = analyticsRevisions.reduce((sum, r) => sum + (r.cost || 0), 0);
+  const analyticsAvgCost = analyticsRevisions.length > 0 ? Math.round(analyticsTotalCost / analyticsRevisions.length) : 0;
+  const analyticsOverdueCount = analyticsRevisions.filter(r => r.status === 'overdue').length;
+  const analyticsDueSoonCount = analyticsRevisions.filter(r => r.status === 'due_soon').length;
+  const analyticsUpToDateCount = analyticsRevisions.filter(r => r.status === 'up_to_date').length;
+  const analyticsComplianceRate = analyticsRevisions.length > 0 ? Math.round((analyticsUpToDateCount / analyticsRevisions.length) * 100) : 100;
+
   // Calendar helpers
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => {
     const day = new Date(year, month, 1).getDay();
-    return day === 0 ? 6 : day - 1; // Monday start
+    return day === 0 ? 6 : day - 1;
   };
 
   const currentYear = calendarDate.getFullYear();
-  const currentMonth = calendarDate.getMonth(); // 0-11
+  const currentMonth = calendarDate.getMonth();
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
 
@@ -121,18 +141,9 @@ export const RevisionsPage: React.FC = () => {
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
   ];
 
-  const prevMonth = () => {
-    setCalendarDate(new Date(currentYear, currentMonth - 1, 1));
-  };
-  const nextMonth = () => {
-    setCalendarDate(new Date(currentYear, currentMonth + 1, 1));
-  };
-  const resetToToday = () => {
-    setCalendarDate(new Date(2026, 7, 1));
-  };
-
-  // Calculate total costs for analytics
-  const totalCost = revisions.reduce((sum, r) => sum + (r.cost || 0), 0);
+  const prevMonth = () => setCalendarDate(new Date(currentYear, currentMonth - 1, 1));
+  const nextMonth = () => setCalendarDate(new Date(currentYear, currentMonth + 1, 1));
+  const resetToToday = () => setCalendarDate(new Date(2026, 7, 1));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -486,7 +497,6 @@ export const RevisionsPage: React.FC = () => {
             overflow: 'hidden',
             border: '1px solid var(--border-color)'
           }}>
-            {/* Days of week header */}
             {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'].map((day, idx) => (
               <div key={idx} style={{
                 backgroundColor: '#0F172A',
@@ -500,19 +510,15 @@ export const RevisionsPage: React.FC = () => {
               </div>
             ))}
 
-            {/* Empty slots for first week offset */}
             {Array.from({ length: firstDay }).map((_, idx) => (
               <div key={`empty-${idx}`} style={{ backgroundColor: 'var(--bg-card)', minHeight: '100px', opacity: 0.3 }} />
             ))}
 
-            {/* Calendar Days */}
             {Array.from({ length: daysInMonth }).map((_, idx) => {
               const dayNum = idx + 1;
               const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-              
-              // Find revisions due on this day
               const dayRevisions = revisions.filter(r => r.nextDueDate === dateStr);
-              const isToday = dayNum === 12 && currentMonth === 7 && currentYear === 2026; // Current local time in demo
+              const isToday = dayNum === 12 && currentMonth === 7 && currentYear === 2026;
 
               return (
                 <div key={`day-${dayNum}`} style={{
@@ -524,11 +530,7 @@ export const RevisionsPage: React.FC = () => {
                   flexDirection: 'column',
                   gap: '0.4rem'
                 }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{
                       fontWeight: isToday ? 800 : 600,
                       fontSize: '0.85rem',
@@ -545,7 +547,6 @@ export const RevisionsPage: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Day items */}
                   {dayRevisions.map(rev => {
                     const badge = getTypeBadgeStyle(rev.type);
                     return (
@@ -582,64 +583,258 @@ export const RevisionsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: ANALYTICS VIEW */}
+      {/* Tab 3: INTERACTIVE ANALYTICS VIEW */}
       {activeTab === 'analytics' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-cyan)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Budget Total Révisions</span>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff', marginTop: '0.5rem' }}>
-                {totalCost.toLocaleString()} MAD
-              </div>
+          {/* Interactive Filters Bar */}
+          <div className="card" style={{
+            padding: '1rem 1.25rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderLeft: '4px solid var(--accent-cyan)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
+                Filtres Analytiques Télémétriques
+              </span>
             </div>
 
-            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #10B981' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Taux de Conformité</span>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981', marginTop: '0.5rem' }}>
-                {totalCount > 0 ? Math.round(((totalCount - overdueCount) / totalCount) * 100) : 100}%
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Filtrer par Véhicule:</span>
+                <select 
+                  className="form-control" 
+                  value={analyticsVehicleFilter}
+                  onChange={(e) => setAnalyticsVehicleFilter(e.target.value)}
+                  style={{ width: '210px', height: '36px', fontSize: '0.85rem' }}
+                >
+                  <option value="all">🚗 Tous les véhicules ({vehicles.length})</option>
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.brand} {v.model} ({v.plateNumber})
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #F59E0B' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Entretiens Imminents (15j / 1000km)</span>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F59E0B', marginTop: '0.5rem' }}>
-                {dueSoonCount} révisions
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #EF4444' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Révisions en Retard</span>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#EF4444', marginTop: '0.5rem' }}>
-                {overdueCount} révisions
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginRight: '0.5rem' }}>Période:</span>
+                <select 
+                  className="form-control" 
+                  value={analyticsPeriod}
+                  onChange={(e) => setAnalyticsPeriod(e.target.value)}
+                  style={{ width: '160px', height: '36px', fontSize: '0.85rem' }}
+                >
+                  <option value="all">📅 Tout l'historique</option>
+                  <option value="30days">30 derniers jours</option>
+                  <option value="6months">6 derniers mois</option>
+                  <option value="year2026">Année 2026</option>
+                </select>
               </div>
             </div>
           </div>
 
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem' }}>
-              Répartition des Coûts par Type de Révision
-            </h3>
+          {/* Interactive Category Filter Pills */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Filtrer par catégorie:</span>
+            <button
+              onClick={() => setAnalyticsTypeFilter('all')}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                border: analyticsTypeFilter === 'all' ? '1px solid var(--accent-cyan)' : '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: analyticsTypeFilter === 'all' ? 'var(--accent-cyan-glow)' : 'var(--bg-card)',
+                color: analyticsTypeFilter === 'all' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Toutes les catégories
+            </button>
+            {(['vidange', 'visite_technique', 'tachygraphe', 'assurance', 'vignette', 'autre'] as RevisionType[]).map(t => {
+              const style = getTypeBadgeStyle(t);
+              const isSelected = analyticsTypeFilter === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setAnalyticsTypeFilter(isSelected ? 'all' : t)}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    border: `1px solid ${isSelected ? style.color : style.border}`,
+                    backgroundColor: isSelected ? style.bg : 'var(--bg-card)',
+                    color: isSelected ? style.color : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {getTypeLabel(t)}
+                </button>
+              );
+            })}
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {(['vidange', 'assurance', 'visite_technique', 'vignette', 'tachygraphe', 'autre'] as RevisionType[]).map(t => {
-                const subCost = revisions.filter(r => r.type === t).reduce((sum, r) => sum + (r.cost || 0), 0);
-                const percent = totalCost > 0 ? Math.round((subCost / totalCost) * 100) : 0;
-                const badge = getTypeBadgeStyle(t);
-
-                return (
-                  <div key={t} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: 600, color: badge.color }}>{getTypeLabel(t)}</span>
-                      <span style={{ fontWeight: 700, color: '#fff' }}>{subCost.toLocaleString()} MAD ({percent}%)</span>
-                    </div>
-                    <div style={{ height: '8px', width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${percent}%`, backgroundColor: badge.color, borderRadius: '4px', transition: 'width 0.5s ease-in-out' }} />
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Key KPI Widgets Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+            
+            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-cyan)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>CUMUL DES COÛTS (MAD)</span>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: '0.4rem' }}>
+                {analyticsTotalCost.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--accent-cyan)' }}>MAD</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+                Sur {analyticsRevisions.length} révisions analysées
+              </span>
             </div>
+
+            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #3B82F6' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>COÛT MOYEN / RÉVISION</span>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#3B82F6', marginTop: '0.4rem' }}>
+                {analyticsAvgCost.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>MAD</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+                Moyenne globale par véhicule
+              </span>
+            </div>
+
+            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #10B981' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>SCORE DE CONFORMITÉ</span>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981', marginTop: '0.4rem' }}>
+                {analyticsComplianceRate}%
+              </div>
+              <div style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginTop: '0.5rem', overflow: 'hidden' }}>
+                <div style={{ width: `${analyticsComplianceRate}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '3px' }} />
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #EF4444' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>URGENCES & RETARDS</span>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#EF4444', marginTop: '0.4rem' }}>
+                {analyticsOverdueCount + analyticsDueSoonCount} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>action(s)</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#EF4444', marginTop: '0.25rem', display: 'block', fontWeight: 600 }}>
+                {analyticsOverdueCount} en retard | {analyticsDueSoonCount} à faire
+              </span>
+            </div>
+
+          </div>
+
+          {/* Interactive Cost Distribution Chart & Breakdown */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
+            
+            {/* Chart 1: Cost breakdown by category */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
+                Répartition Financière par Type de Révision
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                {(['vidange', 'assurance', 'visite_technique', 'vignette', 'tachygraphe', 'autre'] as RevisionType[]).map(t => {
+                  const subCost = analyticsRevisions.filter(r => r.type === t).reduce((sum, r) => sum + (r.cost || 0), 0);
+                  const count = analyticsRevisions.filter(r => r.type === t).length;
+                  const percent = analyticsTotalCost > 0 ? Math.round((subCost / analyticsTotalCost) * 100) : 0;
+                  const style = getTypeBadgeStyle(t);
+
+                  return (
+                    <div 
+                      key={t}
+                      onClick={() => setAnalyticsTypeFilter(analyticsTypeFilter === t ? 'all' : t)}
+                      style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.4rem',
+                        cursor: 'pointer',
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                        backgroundColor: analyticsTypeFilter === t ? 'rgba(255,255,255,0.05)' : 'transparent',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 700, color: style.color, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: style.color, display: 'inline-block' }} />
+                          {getTypeLabel(t)} <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>({count} révision{count > 1 ? 's' : ''})</span>
+                        </span>
+                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                          {subCost.toLocaleString()} MAD <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>({percent}%)</span>
+                        </span>
+                      </div>
+                      
+                      <div style={{ height: '10px', width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                        <div style={{ 
+                          height: '100%', 
+                          width: `${percent}%`, 
+                          backgroundColor: style.color, 
+                          borderRadius: '5px',
+                          transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: `0 0 10px ${style.color}40`
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Chart 2: Cost Breakdown per Vehicle */}
+            <div className="card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                Dépenses par Véhicule
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {vehicles.map(v => {
+                  const vehRevisions = analyticsRevisions.filter(r => r.vehicleId === v.id);
+                  const vehCost = vehRevisions.reduce((sum, r) => sum + (r.cost || 0), 0);
+                  const vehPercent = analyticsTotalCost > 0 ? Math.round((vehCost / analyticsTotalCost) * 100) : 0;
+
+                  return (
+                    <div 
+                      key={v.id}
+                      onClick={() => setAnalyticsVehicleFilter(analyticsVehicleFilter === v.id ? 'all' : v.id)}
+                      style={{
+                        padding: '0.75rem',
+                        borderRadius: '10px',
+                        backgroundColor: analyticsVehicleFilter === v.id ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-input)',
+                        border: analyticsVehicleFilter === v.id ? '1px solid var(--accent-cyan)' : '1px solid transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.35rem' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                          {v.brand} {v.model} ({v.plateNumber})
+                        </span>
+                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                          {vehCost.toLocaleString()} MAD
+                        </span>
+                      </div>
+                      
+                      <div style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${vehPercent}%`, height: '100%', backgroundColor: 'var(--accent-cyan)', borderRadius: '3px' }} />
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                        <span>{vehRevisions.length} révision(s) enregistrée(s)</span>
+                        <span>{vehPercent}% du budget</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
 
         </div>
