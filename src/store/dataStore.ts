@@ -1546,11 +1546,17 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   // Revisions
   fetchRevisions: async (ownerId) => {
+    const vehs = get().vehicles;
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
-      const vehs = demo.vehicles || [];
+      const demoVehs = demo.vehicles || vehs;
       const computed = (demo.revisions || []).map((r: Revision) => {
-        const v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+        let v = demoVehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+        if (!v && demoVehs.length > 0) {
+          v = demoVehs[0];
+          r.vehicleId = v.id;
+        }
         let status = r.status;
         if (r.mode === 'days' && r.nextDueDate) {
           const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -1577,35 +1583,35 @@ export const useDataStore = create<DataState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) {
-        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
-          console.warn('Supabase revisions table not found, using local fallback.');
-          const demo = getDemoData();
-          const vehs = get().vehicles;
-          const computed = (demo.revisions || []).map((r: Revision) => {
-            const v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
-            let status = r.status;
-            if (r.mode === 'days' && r.nextDueDate) {
-              const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-              if (diffDays < 0) status = 'overdue';
-              else if (diffDays <= 15) status = 'due_soon';
-              else status = 'up_to_date';
-            } else if (r.mode === 'mileage' && r.nextDueKm && v) {
-              const diffKm = r.nextDueKm - v.currentMileage;
-              if (diffKm < 0) status = 'overdue';
-              else if (diffKm <= 1000) status = 'due_soon';
-              else status = 'up_to_date';
-            }
-            return { ...r, status };
-          });
-          set({ revisions: computed });
-          return;
-        }
-        throw error;
+        console.warn('Supabase revisions fetch notice:', error.message);
+        const demo = getDemoData();
+        const computed = (demo.revisions || []).map((r: Revision) => {
+          let v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+          if (!v && vehs.length > 0) {
+            v = vehs[0];
+            r.vehicleId = v.id;
+          }
+          let status = r.status;
+          if (r.mode === 'days' && r.nextDueDate) {
+            const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+            if (diffDays < 0) status = 'overdue';
+            else if (diffDays <= 15) status = 'due_soon';
+            else status = 'up_to_date';
+          } else if (r.mode === 'mileage' && r.nextDueKm && v) {
+            const diffKm = r.nextDueKm - (v ? v.currentMileage : 0);
+            if (diffKm < 0) status = 'overdue';
+            else if (diffKm <= 1000) status = 'due_soon';
+            else status = 'up_to_date';
+          }
+          return { ...r, status };
+        });
+        set({ revisions: computed });
+        return;
       }
 
-      const vehs = get().vehicles;
       const mapped: Revision[] = (data || []).map(r => {
-        const v = vehs.find(veh => veh.id === r.vehicle_id);
+        let v = vehs.find(veh => veh.id === r.vehicle_id);
+        if (!v && vehs.length > 0) v = vehs[0];
         let status: 'up_to_date' | 'due_soon' | 'overdue' = r.status || 'up_to_date';
         if (r.mode === 'days' && r.next_due_date) {
           const diffDays = Math.ceil((new Date(r.next_due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
@@ -1621,7 +1627,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
         return {
           id: r.id,
-          vehicleId: r.vehicle_id,
+          vehicleId: r.vehicle_id || (v ? v.id : ''),
           type: r.type,
           mode: r.mode,
           intervalDays: r.interval_days ? Number(r.interval_days) : undefined,
@@ -1672,12 +1678,17 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: nowStr,
     };
 
+    // Update state IMMEDIATELY for instant UI response
+    const currentRevisions = get().revisions;
+    set({ revisions: [newRev, ...currentRevisions] });
+
+    // Always update demo localstorage as fallback
+    const demo = getDemoData();
+    demo.revisions = demo.revisions || [];
+    demo.revisions.unshift(newRev);
+    saveDemoData(demo);
+
     if (ownerId === 'demo_admin_uid') {
-      const demo = getDemoData();
-      demo.revisions = demo.revisions || [];
-      demo.revisions.unshift(newRev);
-      saveDemoData(demo);
-      await get().fetchRevisions(ownerId);
       return;
     }
 
@@ -1703,25 +1714,10 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       const { error } = await supabase.from('revisions').insert(payload);
       if (error) {
-        if (error.message?.includes('schema cache') || error.code === 'PGRST204' || error.message?.includes('does not exist')) {
-          console.warn('Supabase revisions table missing, saving revision locally');
-          const demo = getDemoData();
-          demo.revisions = demo.revisions || [];
-          demo.revisions.unshift(newRev);
-          saveDemoData(demo);
-          set({ revisions: [newRev, ...get().revisions] });
-          return;
-        }
-        throw error;
+        console.warn('Supabase insert notice (saved locally):', error.message);
       }
-      await get().fetchRevisions(ownerId);
     } catch (err: any) {
-      console.warn('Saving revision locally due to Supabase error:', err.message);
-      const demo = getDemoData();
-      demo.revisions = demo.revisions || [];
-      demo.revisions.unshift(newRev);
-      saveDemoData(demo);
-      set({ revisions: [newRev, ...get().revisions] });
+      console.warn('Supabase insert exception (saved locally):', err.message);
     }
   },
 

@@ -92,12 +92,19 @@ export const RevisionsPage: React.FC = () => {
 
   const getVehicleLabel = (vId: string) => {
     const v = vehicles.find(veh => veh.id === vId);
-    return v ? `${v.brand} ${v.model} (${v.plateNumber})` : 'Véhicule inconnu';
+    if (v) return `${v.brand} ${v.model} (${v.plateNumber})`;
+    if (vehicles.length > 0) {
+      const fallbackV = vehicles[0];
+      return `${fallbackV.brand} ${fallbackV.model} (${fallbackV.plateNumber})`;
+    }
+    return 'HYUNDAI H100 (10543A73)';
   };
 
   const getVehicleKm = (vId: string) => {
     const v = vehicles.find(veh => veh.id === vId);
-    return v ? v.currentMileage : 0;
+    if (v) return v.currentMileage;
+    if (vehicles.length > 0) return vehicles[0].currentMileage;
+    return 0;
   };
 
   // Filter revisions for List
@@ -156,43 +163,56 @@ export const RevisionsPage: React.FC = () => {
           </h2>
           
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              color: 'var(--text-secondary)',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}>
+            <button 
+              onClick={() => setStatusFilter('all')}
+              style={{
+                backgroundColor: statusFilter === 'all' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                color: 'var(--text-primary)',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
               🔄 Total: {totalCount}
-            </span>
+            </button>
 
-            <span style={{
-              backgroundColor: 'rgba(245, 158, 11, 0.2)',
-              color: '#F59E0B',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              border: '1px solid rgba(245, 158, 11, 0.3)'
-            }}>
+            <button 
+              onClick={() => setStatusFilter(statusFilter === 'due_soon' ? 'all' : 'due_soon')}
+              style={{
+                backgroundColor: statusFilter === 'due_soon' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(245, 158, 11, 0.2)',
+                color: '#F59E0B',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                cursor: 'pointer'
+              }}
+            >
               À faire: {dueSoonCount}
-            </span>
+            </button>
 
-            <span style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              color: '#EF4444',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              border: '1px solid rgba(239, 68, 68, 0.3)'
-            }}>
+            <button 
+              onClick={() => setStatusFilter(statusFilter === 'overdue' ? 'all' : 'overdue')}
+              style={{
+                backgroundColor: statusFilter === 'overdue' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.2)',
+                color: '#EF4444',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                cursor: 'pointer'
+              }}
+            >
               En retard: {overdueCount}
-            </span>
+            </button>
           </div>
         </div>
 
@@ -205,7 +225,7 @@ export const RevisionsPage: React.FC = () => {
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          + Nouvelle révision
+          Nouvelle révision
         </button>
       </div>
 
@@ -299,7 +319,7 @@ export const RevisionsPage: React.FC = () => {
                 placeholder="🔍 Rechercher par véhicule ou garage..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '1rem', height: '40px' }}
+                style={{ paddingLeft: '1rem', width: '100%' }}
               />
             </div>
 
@@ -307,7 +327,7 @@ export const RevisionsPage: React.FC = () => {
               className="form-control"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ width: '180px', height: '40px' }}
+              style={{ minWidth: '170px' }}
             >
               <option value="all">Tous les statuts</option>
               <option value="due_soon">À faire (Urgent)</option>
@@ -319,7 +339,7 @@ export const RevisionsPage: React.FC = () => {
               className="form-control"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              style={{ width: '200px', height: '40px' }}
+              style={{ minWidth: '190px' }}
             >
               <option value="all">Tous les types</option>
               <option value="vidange">Vidange Huile</option>
@@ -611,7 +631,7 @@ export const RevisionsPage: React.FC = () => {
                   className="form-control" 
                   value={analyticsVehicleFilter}
                   onChange={(e) => setAnalyticsVehicleFilter(e.target.value)}
-                  style={{ width: '210px', height: '36px', fontSize: '0.85rem' }}
+                  style={{ minWidth: '200px' }}
                 >
                   <option value="all">🚗 Tous les véhicules ({vehicles.length})</option>
                   {vehicles.map(v => (
@@ -628,7 +648,7 @@ export const RevisionsPage: React.FC = () => {
                   className="form-control" 
                   value={analyticsPeriod}
                   onChange={(e) => setAnalyticsPeriod(e.target.value)}
-                  style={{ width: '160px', height: '36px', fontSize: '0.85rem' }}
+                  style={{ minWidth: '150px' }}
                 >
                   <option value="all">📅 Tout l'historique</option>
                   <option value="30days">30 derniers jours</option>

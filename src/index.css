@@ -379,11 +379,29 @@ button, input, select, textarea {
   background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.85rem;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
   outline: none;
   transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+select.form-control {
+  appearance: auto;
+  -webkit-appearance: auto;
+  cursor: pointer;
+  background-color: #1E293B;
+  color: #FFFFFF;
+  padding-right: 2rem;
+}
+
+select.form-control option {
+  background-color: #0F172A;
+  color: #FFFFFF;
+  padding: 10px 14px;
+  font-size: 0.9rem;
 }
 
 .form-control:focus {
