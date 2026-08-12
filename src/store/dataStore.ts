@@ -1693,9 +1693,12 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const payload = {
-        id: newId,
-        vehicle_id: revisionData.vehicleId,
+      const isUUID = (str?: string) => str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const safeVehId = isUUID(revisionData.vehicleId) ? revisionData.vehicleId : null;
+
+      const payload: any = {
+        id: isUUID(newId) ? newId : generateUUID(),
+        vehicle_id: safeVehId,
         type: revisionData.type,
         mode: revisionData.mode,
         interval_days: revisionData.intervalDays || null,
@@ -1712,12 +1715,12 @@ export const useDataStore = create<DataState>((set, get) => ({
         created_at: nowStr,
       };
 
-      const { error } = await supabase.from('revisions').insert(payload);
+      let { error } = await supabase.from('revisions').insert(payload);
       if (error) {
-        console.warn('Supabase insert notice (saved locally):', error.message);
+        console.warn('Supabase insert notice:', error.message);
       }
     } catch (err: any) {
-      console.warn('Supabase insert exception (saved locally):', err.message);
+      console.warn('Supabase insert exception:', err.message);
     }
   },
 
