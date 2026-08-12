@@ -125,3 +125,28 @@ export interface AppNotification {
   ownerId: string;
   createdAt: string;
 }
+
+export type RevisionType = 'vidange' | 'tachygraphe' | 'visite_technique' | 'assurance' | 'vignette' | 'autre';
+export type RevisionMode = 'days' | 'mileage';
+export type RevisionStatus = 'up_to_date' | 'due_soon' | 'overdue';
+
+export interface Revision {
+  id: string;
+  vehicleId: string;
+  type: RevisionType;
+  mode: RevisionMode;
+  intervalDays?: number;
+  lastDate?: string;
+  nextDueDate?: string;
+  intervalKm?: number;
+  lastKm?: number;
+  nextDueKm?: number;
+  cost?: number;
+  invoiceNumber?: string;
+  provider?: string;
+  notes?: string;
+  status: RevisionStatus;
+  ownerId: string;
+  createdAt: string;
+}
+

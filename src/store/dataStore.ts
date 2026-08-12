@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { 
   Vehicle, Driver, Tank, Barrel, 
-  FuelFill, BarrelMovement, AppNotification 
+  FuelFill, BarrelMovement, AppNotification, Revision 
 } from '../types';
 
 interface DataState {
@@ -13,6 +13,7 @@ interface DataState {
   fuelFills: FuelFill[];
   barrelMovements: BarrelMovement[];
   notifications: AppNotification[];
+  revisions: Revision[];
   loading: boolean;
   error: string | null;
 
@@ -94,6 +95,13 @@ interface DataState {
     title: string;
     message: string;
   }) => Promise<void>;
+
+  // Revisions
+  fetchRevisions: (ownerId: string) => Promise<void>;
+  addRevision: (revision: Omit<Revision, 'id' | 'status'> & { id?: string }) => Promise<void>;
+  updateRevision: (revision: Revision) => Promise<void>;
+  deleteRevision: (id: string, ownerId: string) => Promise<void>;
+  completeRevision: (id: string, ownerId: string) => Promise<void>;
 }
 
 // Generate UUID for browser/demo
@@ -224,6 +232,88 @@ const getDemoData = () => {
         ownerId: 'demo_admin_uid',
         createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
       }
+    ],
+    revisions: [
+      {
+        id: 'rev_1',
+        vehicleId: 'demo_veh_1',
+        type: 'vidange' as const,
+        mode: 'mileage' as const,
+        intervalKm: 10000,
+        lastKm: 80000,
+        nextDueKm: 90000,
+        cost: 850,
+        invoiceNumber: 'FAC-2024-089',
+        provider: 'Garage Auto Express',
+        notes: 'Vidange huile moteur 5W30 + changement filtres',
+        status: 'due_soon' as const,
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 24 * 30).toISOString(),
+      },
+      {
+        id: 'rev_2',
+        vehicleId: 'demo_veh_1',
+        type: 'visite_technique' as const,
+        mode: 'days' as const,
+        intervalDays: 365,
+        lastDate: '2025-08-20',
+        nextDueDate: '2026-08-20',
+        cost: 400,
+        invoiceNumber: 'VT-9981',
+        provider: 'Centre Contrôle Technique',
+        notes: 'Visite technique annuelle',
+        status: 'due_soon' as const,
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 24 * 60).toISOString(),
+      },
+      {
+        id: 'rev_3',
+        vehicleId: 'demo_veh_2',
+        type: 'tachygraphe' as const,
+        mode: 'days' as const,
+        intervalDays: 730,
+        lastDate: '2024-09-01',
+        nextDueDate: '2026-09-01',
+        cost: 650,
+        invoiceNumber: 'TACH-012',
+        provider: 'Centre Agréé Tachygraphe',
+        notes: 'Étalonnage et vérification bi-annuelle tachygraphe',
+        status: 'up_to_date' as const,
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 24 * 90).toISOString(),
+      },
+      {
+        id: 'rev_4',
+        vehicleId: 'demo_veh_2',
+        type: 'assurance' as const,
+        mode: 'days' as const,
+        intervalDays: 365,
+        lastDate: '2025-08-01',
+        nextDueDate: '2026-08-01',
+        cost: 4500,
+        invoiceNumber: 'ASS-2026-X',
+        provider: 'AXA Assurance Fleet',
+        notes: 'Renouvellement contrat assurance tous risques',
+        status: 'overdue' as const,
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 24 * 120).toISOString(),
+      },
+      {
+        id: 'rev_5',
+        vehicleId: 'demo_veh_1',
+        type: 'vignette' as const,
+        mode: 'days' as const,
+        intervalDays: 365,
+        lastDate: '2026-01-01',
+        nextDueDate: '2027-01-01',
+        cost: 1500,
+        invoiceNumber: 'VIG-2026-MAR',
+        provider: 'Trésorerie Générale',
+        notes: 'Paiement taxe spéciale annuelle véhicules',
+        status: 'up_to_date' as const,
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 24 * 150).toISOString(),
+      }
     ]
   };
 
@@ -245,6 +335,7 @@ export const useDataStore = create<DataState>((set, get) => ({
   fuelFills: [],
   barrelMovements: [],
   notifications: [],
+  revisions: [],
   loading: false,
   error: null,
 
@@ -258,7 +349,8 @@ export const useDataStore = create<DataState>((set, get) => ({
         get().fetchVehicles(ownerId),
         get().fetchDrivers(ownerId),
         get().fetchFuelFills(ownerId),
-        get().fetchNotifications(ownerId)
+        get().fetchNotifications(ownerId),
+        get().fetchRevisions(ownerId)
       ]);
       set({ loading: false });
     } catch (err: any) {
@@ -1449,6 +1541,247 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (error) throw error;
     } catch (err: any) {
       console.error('Failed to send notification:', err);
+    }
+  },
+
+  // Revisions
+  fetchRevisions: async (ownerId) => {
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      const vehs = demo.vehicles || [];
+      const computed = (demo.revisions || []).map((r: Revision) => {
+        const v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+        let status = r.status;
+        if (r.mode === 'days' && r.nextDueDate) {
+          const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+          if (diffDays < 0) status = 'overdue';
+          else if (diffDays <= 15) status = 'due_soon';
+          else status = 'up_to_date';
+        } else if (r.mode === 'mileage' && r.nextDueKm && v) {
+          const diffKm = r.nextDueKm - v.currentMileage;
+          if (diffKm < 0) status = 'overdue';
+          else if (diffKm <= 1000) status = 'due_soon';
+          else status = 'up_to_date';
+        }
+        return { ...r, status };
+      });
+      set({ revisions: computed });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('revisions')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const vehs = get().vehicles;
+      const mapped: Revision[] = (data || []).map(r => {
+        const v = vehs.find(veh => veh.id === r.vehicle_id);
+        let status: 'up_to_date' | 'due_soon' | 'overdue' = r.status || 'up_to_date';
+        if (r.mode === 'days' && r.next_due_date) {
+          const diffDays = Math.ceil((new Date(r.next_due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+          if (diffDays < 0) status = 'overdue';
+          else if (diffDays <= 15) status = 'due_soon';
+          else status = 'up_to_date';
+        } else if (r.mode === 'mileage' && r.next_due_km && v) {
+          const diffKm = r.next_due_km - v.currentMileage;
+          if (diffKm < 0) status = 'overdue';
+          else if (diffKm <= 1000) status = 'due_soon';
+          else status = 'up_to_date';
+        }
+
+        return {
+          id: r.id,
+          vehicleId: r.vehicle_id,
+          type: r.type,
+          mode: r.mode,
+          intervalDays: r.interval_days ? Number(r.interval_days) : undefined,
+          lastDate: r.last_date,
+          nextDueDate: r.next_due_date,
+          intervalKm: r.interval_km ? Number(r.interval_km) : undefined,
+          lastKm: r.last_km ? Number(r.last_km) : undefined,
+          nextDueKm: r.next_due_km ? Number(r.next_due_km) : undefined,
+          cost: r.cost ? Number(r.cost) : undefined,
+          invoiceNumber: r.invoice_number,
+          provider: r.provider,
+          notes: r.notes,
+          status,
+          ownerId: r.owner_id,
+          createdAt: r.created_at
+        };
+      });
+
+      set({ revisions: mapped });
+    } catch (err: any) {
+      set({ error: err.message });
+    }
+  },
+
+  addRevision: async (revisionData) => {
+    const ownerId = revisionData.ownerId;
+    const newId = revisionData.id || generateUUID();
+    const nowStr = new Date().toISOString();
+
+    // Calculate next due date / km
+    let nextDueDate = revisionData.nextDueDate;
+    let nextDueKm = revisionData.nextDueKm;
+
+    if (revisionData.mode === 'days' && revisionData.lastDate && revisionData.intervalDays) {
+      const d = new Date(revisionData.lastDate);
+      d.setDate(d.getDate() + Number(revisionData.intervalDays));
+      nextDueDate = d.toISOString().split('T')[0];
+    } else if (revisionData.mode === 'mileage' && revisionData.lastKm !== undefined && revisionData.intervalKm) {
+      nextDueKm = Number(revisionData.lastKm) + Number(revisionData.intervalKm);
+    }
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.revisions = demo.revisions || [];
+      const newRev: Revision = {
+        ...revisionData,
+        id: newId,
+        nextDueDate,
+        nextDueKm,
+        status: 'up_to_date',
+        createdAt: nowStr,
+      };
+      demo.revisions.unshift(newRev);
+      saveDemoData(demo);
+      await get().fetchRevisions(ownerId);
+      return;
+    }
+
+    try {
+      const payload = {
+        id: newId,
+        vehicle_id: revisionData.vehicleId,
+        type: revisionData.type,
+        mode: revisionData.mode,
+        interval_days: revisionData.intervalDays || null,
+        last_date: revisionData.lastDate || null,
+        next_due_date: nextDueDate || null,
+        interval_km: revisionData.intervalKm || null,
+        last_km: revisionData.lastKm || null,
+        next_due_km: nextDueKm || null,
+        cost: revisionData.cost || 0,
+        invoice_number: revisionData.invoiceNumber || null,
+        provider: revisionData.provider || null,
+        notes: revisionData.notes || null,
+        status: 'up_to_date',
+        owner_id: ownerId,
+        created_at: nowStr,
+      };
+
+      const { error } = await supabase.from('revisions').insert(payload);
+      if (error) throw error;
+      await get().fetchRevisions(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  updateRevision: async (revision) => {
+    const ownerId = revision.ownerId;
+
+    let nextDueDate = revision.nextDueDate;
+    let nextDueKm = revision.nextDueKm;
+
+    if (revision.mode === 'days' && revision.lastDate && revision.intervalDays) {
+      const d = new Date(revision.lastDate);
+      d.setDate(d.getDate() + Number(revision.intervalDays));
+      nextDueDate = d.toISOString().split('T')[0];
+    } else if (revision.mode === 'mileage' && revision.lastKm !== undefined && revision.intervalKm) {
+      nextDueKm = Number(revision.lastKm) + Number(revision.intervalKm);
+    }
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.revisions = (demo.revisions || []).map((r: Revision) => 
+        r.id === revision.id ? { ...revision, nextDueDate, nextDueKm } : r
+      );
+      saveDemoData(demo);
+      await get().fetchRevisions(ownerId);
+      return;
+    }
+
+    try {
+      const payload = {
+        vehicle_id: revision.vehicleId,
+        type: revision.type,
+        mode: revision.mode,
+        interval_days: revision.intervalDays || null,
+        last_date: revision.lastDate || null,
+        next_due_date: nextDueDate || null,
+        interval_km: revision.intervalKm || null,
+        last_km: revision.lastKm || null,
+        next_due_km: nextDueKm || null,
+        cost: revision.cost || 0,
+        invoice_number: revision.invoiceNumber || null,
+        provider: revision.provider || null,
+        notes: revision.notes || null,
+      };
+
+      const { error } = await supabase.from('revisions').update(payload).eq('id', revision.id);
+      if (error) throw error;
+      await get().fetchRevisions(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  deleteRevision: async (id, ownerId) => {
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.revisions = (demo.revisions || []).filter((r: Revision) => r.id !== id);
+      saveDemoData(demo);
+      await get().fetchRevisions(ownerId);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('revisions').delete().eq('id', id);
+      if (error) throw error;
+      await get().fetchRevisions(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  completeRevision: async (id, ownerId) => {
+    const rev = get().revisions.find(r => r.id === id);
+    if (!rev) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const vehicle = get().vehicles.find(v => v.id === rev.vehicleId);
+    const currentKm = vehicle ? vehicle.currentMileage : (rev.lastKm || 0);
+
+    if (rev.mode === 'days') {
+      const nextDue = new Date();
+      nextDue.setDate(nextDue.getDate() + (rev.intervalDays || 30));
+      const nextDueDateStr = nextDue.toISOString().split('T')[0];
+
+      await get().updateRevision({
+        ...rev,
+        lastDate: todayStr,
+        nextDueDate: nextDueDateStr,
+        status: 'up_to_date'
+      });
+    } else {
+      const nextDueKm = currentKm + (rev.intervalKm || 10000);
+
+      await get().updateRevision({
+        ...rev,
+        lastKm: currentKm,
+        nextDueKm: nextDueKm,
+        status: 'up_to_date'
+      });
     }
   }
 }));
