@@ -94,20 +94,56 @@ export const RepairsPage: React.FC = () => {
   const getStatusBadge = (s: RepairStatus) => {
     if (s === 'pending') {
       return (
-        <span style={{ backgroundColor: 'rgba(148, 163, 184, 0.15)', color: '#CBD5E1', border: '1px solid rgba(148, 163, 184, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
+        <span style={{ 
+          backgroundColor: 'rgba(148, 163, 184, 0.15)', 
+          color: '#CBD5E1', 
+          border: '1px solid rgba(148, 163, 184, 0.3)', 
+          padding: '0.35rem 0.75rem', 
+          borderRadius: '20px', 
+          fontSize: '0.75rem', 
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.35rem'
+        }}>
           📥 En attente
         </span>
       );
     }
     if (s === 'in_progress') {
       return (
-        <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', border: '1px solid rgba(245, 158, 11, 0.4)', padding: '0.25rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+        <span style={{ 
+          backgroundColor: 'rgba(245, 158, 11, 0.2)', 
+          color: '#F59E0B', 
+          border: '1px solid rgba(245, 158, 11, 0.4)', 
+          padding: '0.35rem 0.75rem', 
+          borderRadius: '20px', 
+          fontSize: '0.75rem', 
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.35rem'
+        }}>
           🔧 En cours
         </span>
       );
     }
     return (
-      <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.4)', padding: '0.25rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+      <span style={{ 
+        backgroundColor: 'rgba(16, 185, 129, 0.2)', 
+        color: '#10B981', 
+        border: '1px solid rgba(16, 185, 129, 0.4)', 
+        padding: '0.35rem 0.75rem', 
+        borderRadius: '20px', 
+        fontSize: '0.75rem', 
+        fontWeight: 700,
+        whiteSpace: 'nowrap',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.35rem'
+      }}>
         ✅ Terminé
       </span>
     );
