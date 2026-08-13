@@ -1,19 +1,32 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { 
-  Vehicle, Driver, Tank, Barrel, 
-  FuelFill, BarrelMovement, AppNotification, Revision 
+  Tank, 
+  Barrel, 
+  Vehicle, 
+  Driver, 
+  TankMovement, 
+  BarrelMovement, 
+  FuelFill, 
+  AppNotification,
+  Revision,
+  Repair,
+  RepairType,
+  RepairPriority,
+  RepairStatus
 } from '../types';
 
 interface DataState {
-  vehicles: Vehicle[];
-  drivers: Driver[];
   tank: Tank | null;
   barrels: Barrel[];
-  fuelFills: FuelFill[];
+  vehicles: Vehicle[];
+  drivers: Driver[];
+  tankMovements: TankMovement[];
   barrelMovements: BarrelMovement[];
+  fuelFills: FuelFill[];
   notifications: AppNotification[];
   revisions: Revision[];
+  repairs: Repair[];
   loading: boolean;
   error: string | null;
 
@@ -102,6 +115,13 @@ interface DataState {
   updateRevision: (revision: Revision) => Promise<void>;
   deleteRevision: (id: string, ownerId: string) => Promise<void>;
   completeRevision: (id: string, ownerId: string) => Promise<void>;
+
+  // Repairs
+  fetchRepairs: (ownerId: string) => Promise<void>;
+  addRepair: (repair: Omit<Repair, 'id'> & { id?: string }) => Promise<void>;
+  updateRepair: (repair: Repair) => Promise<void>;
+  deleteRepair: (id: string, ownerId: string) => Promise<void>;
+  completeRepair: (id: string, ownerId: string) => Promise<void>;
 }
 
 // Generate UUID for browser/demo
@@ -308,11 +328,56 @@ const getDemoData = () => {
         nextDueDate: '2027-01-01',
         cost: 1500,
         invoiceNumber: 'VIG-2026-MAR',
-        provider: 'Trésorerie Générale',
-        notes: 'Paiement taxe spéciale annuelle véhicules',
+        provider: 'DGI Vignette',
+        notes: 'Paiement vignette fiscale annuelle',
         status: 'up_to_date' as const,
         ownerId: 'demo_admin_uid',
         createdAt: new Date(Date.now() - 3600000 * 24 * 150).toISOString(),
+      }
+    ],
+    repairs: [
+      {
+        id: 'rep_1',
+        vehicleId: 'demo_veh_1',
+        type: 'mecanique' as const,
+        priority: 'high' as const,
+        status: 'in_progress' as const,
+        startDate: '2026-08-10',
+        cost: 2400,
+        provider: 'Garage Central Pro',
+        description: 'Changement kit d\'embrayage et joint de culasse suite à surchauffe moteur.',
+        partsReplaced: 'Kit embrayage Valeo, Joint culasse, Liquide de refroidissement',
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 48).toISOString()
+      },
+      {
+        id: 'rep_2',
+        vehicleId: 'demo_veh_2',
+        type: 'freinage' as const,
+        priority: 'medium' as const,
+        status: 'completed' as const,
+        startDate: '2026-08-01',
+        endDate: '2026-08-03',
+        cost: 1100,
+        provider: 'Auto-Centre Freins',
+        description: 'Remplacement des plaquettes et disques de frein avant.',
+        partsReplaced: 'Disques ventilés Bosch, Plaquettes ceramiques',
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 240).toISOString()
+      },
+      {
+        id: 'rep_3',
+        vehicleId: 'demo_veh_1',
+        type: 'electrique' as const,
+        priority: 'low' as const,
+        status: 'pending' as const,
+        startDate: '2026-08-13',
+        cost: 450,
+        provider: 'Électro-Auto Service',
+        description: 'Diagnostique voyant batterie et remplacement alternateur.',
+        partsReplaced: 'Courroie d\'alternateur',
+        ownerId: 'demo_admin_uid',
+        createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
       }
     ]
   };
@@ -332,10 +397,12 @@ export const useDataStore = create<DataState>((set, get) => ({
   drivers: [],
   tank: null,
   barrels: [],
-  fuelFills: [],
+  tankMovements: [],
   barrelMovements: [],
+  fuelFills: [],
   notifications: [],
   revisions: [],
+  repairs: [],
   loading: false,
   error: null,
 
@@ -350,7 +417,8 @@ export const useDataStore = create<DataState>((set, get) => ({
         get().fetchDrivers(ownerId),
         get().fetchFuelFills(ownerId),
         get().fetchNotifications(ownerId),
-        get().fetchRevisions(ownerId)
+        get().fetchRevisions(ownerId),
+        get().fetchRepairs(ownerId)
       ]);
       set({ loading: false });
     } catch (err: any) {
@@ -1847,5 +1915,204 @@ export const useDataStore = create<DataState>((set, get) => ({
         status: 'up_to_date'
       });
     }
+  },
+
+  // Repairs Management
+  fetchRepairs: async (ownerId) => {
+    const vehs = get().vehicles;
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      const demoVehs = demo.vehicles || vehs;
+      const computed = (demo.repairs || []).map((rep: Repair) => {
+        let v = demoVehs.find((veh: Vehicle) => veh.id === rep.vehicleId);
+        if (!v && demoVehs.length > 0) {
+          v = demoVehs[0];
+          rep.vehicleId = v.id;
+        }
+        return rep;
+      });
+      set({ repairs: computed });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('repairs')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase repairs fetch notice:', error.message);
+        const demo = getDemoData();
+        const computed = (demo.repairs || []).map((rep: Repair) => {
+          let v = vehs.find((veh: Vehicle) => veh.id === rep.vehicleId);
+          if (!v && vehs.length > 0) {
+            v = vehs[0];
+            rep.vehicleId = v.id;
+          }
+          return rep;
+        });
+        set({ repairs: computed });
+        return;
+      }
+
+      const mapped: Repair[] = (data || []).map(r => {
+        let v = vehs.find(veh => veh.id === r.vehicle_id);
+        if (!v && vehs.length > 0) v = vehs[0];
+
+        return {
+          id: r.id,
+          vehicleId: r.vehicle_id || (v ? v.id : ''),
+          type: r.type,
+          priority: r.priority,
+          status: r.status,
+          startDate: r.start_date,
+          endDate: r.end_date,
+          cost: r.cost ? Number(r.cost) : 0,
+          provider: r.provider,
+          description: r.description || '',
+          partsReplaced: r.parts_replaced || '',
+          ownerId: r.owner_id,
+          createdAt: r.created_at
+        };
+      });
+
+      set({ repairs: mapped });
+    } catch (err: any) {
+      console.warn('Fallback to demo repairs:', err.message);
+      const demo = getDemoData();
+      set({ repairs: demo.repairs || [] });
+    }
+  },
+
+  addRepair: async (repairData) => {
+    const ownerId = repairData.ownerId;
+    const newId = repairData.id || generateUUID();
+    const nowStr = new Date().toISOString();
+
+    const isUUID = (str?: string) => str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+    const newRepair: Repair = {
+      ...repairData,
+      id: newId,
+      createdAt: nowStr
+    };
+
+    // Update state IMMEDIATELY
+    const currentRepairs = get().repairs;
+    set({ repairs: [newRepair, ...currentRepairs] });
+
+    // Always update demo localStorage as fallback
+    const demo = getDemoData();
+    demo.repairs = demo.repairs || [];
+    demo.repairs.unshift(newRepair);
+    saveDemoData(demo);
+
+    if (ownerId === 'demo_admin_uid') {
+      return;
+    }
+
+    try {
+      const safeVehId = isUUID(repairData.vehicleId) ? repairData.vehicleId : null;
+
+      const payload: any = {
+        id: isUUID(newId) ? newId : generateUUID(),
+        vehicle_id: safeVehId,
+        type: repairData.type,
+        priority: repairData.priority,
+        status: repairData.status,
+        start_date: repairData.startDate,
+        end_date: repairData.endDate || null,
+        cost: repairData.cost || 0,
+        provider: repairData.provider || null,
+        description: repairData.description || '',
+        parts_replaced: repairData.partsReplaced || null,
+        owner_id: ownerId,
+        created_at: nowStr
+      };
+
+      const { error } = await supabase.from('repairs').insert(payload);
+      if (error) {
+        console.warn('Supabase repair insert notice:', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Supabase repair insert exception:', err.message);
+    }
+  },
+
+  updateRepair: async (repair) => {
+    const ownerId = repair.ownerId;
+    const isUUID = (str?: string) => str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+    // Update local state IMMEDIATELY
+    set({ repairs: get().repairs.map(r => r.id === repair.id ? repair : r) });
+
+    const demo = getDemoData();
+    demo.repairs = (demo.repairs || []).map((r: Repair) => r.id === repair.id ? repair : r);
+    saveDemoData(demo);
+
+    if (ownerId === 'demo_admin_uid') {
+      return;
+    }
+
+    try {
+      const safeVehId = isUUID(repair.vehicleId) ? repair.vehicleId : null;
+
+      const payload: any = {
+        vehicle_id: safeVehId,
+        type: repair.type,
+        priority: repair.priority,
+        status: repair.status,
+        start_date: repair.startDate,
+        end_date: repair.endDate || null,
+        cost: repair.cost || 0,
+        provider: repair.provider || null,
+        description: repair.description || '',
+        parts_replaced: repair.partsReplaced || null,
+      };
+
+      const { error } = await supabase.from('repairs').update(payload).eq('id', repair.id);
+      if (error) {
+        console.warn('Supabase repair update notice:', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Supabase repair update exception:', err.message);
+    }
+  },
+
+  deleteRepair: async (id, ownerId) => {
+    // Update local state IMMEDIATELY
+    set({ repairs: get().repairs.filter(r => r.id !== id) });
+
+    const demo = getDemoData();
+    demo.repairs = (demo.repairs || []).filter((r: Repair) => r.id !== id);
+    saveDemoData(demo);
+
+    if (ownerId === 'demo_admin_uid') {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('repairs').delete().eq('id', id);
+      if (error) {
+        console.warn('Supabase repair delete notice:', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Supabase repair delete exception:', err.message);
+    }
+  },
+
+  completeRepair: async (id, ownerId) => {
+    const rep = get().repairs.find(r => r.id === id);
+    if (!rep) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    await get().updateRepair({
+      ...rep,
+      status: 'completed',
+      endDate: todayStr
+    });
   }
 }));

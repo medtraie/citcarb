@@ -8,6 +8,7 @@ import { BarrelsPage } from './pages/admin/BarrelsPage';
 import { ReportsPage } from './pages/admin/ReportsPage';
 import { ActiveAnalyticsPage } from './pages/admin/ActiveAnalyticsPage';
 import { RevisionsPage } from './pages/admin/RevisionsPage';
+import { RepairsPage } from './pages/admin/RepairsPage';
 import { ManagerDashboard } from './pages/manager/ManagerDashboard';
 import { AccountsPage } from './pages/manager/AccountsPage';
 import { AgentDashboard } from './pages/agent/AgentDashboard';
@@ -79,6 +80,14 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute allowedRoles={['admin', 'responsable']}>
                 <RevisionsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/repairs" 
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'responsable']}>
+                <RepairsPage />
               </ProtectedRoute>
             } 
           />

@@ -150,3 +150,24 @@ export interface Revision {
   createdAt: string;
 }
 
+export type RepairType = 'mecanique' | 'electrique' | 'carrosserie' | 'pneumatique' | 'freinage' | 'hydraulique' | 'autre';
+export type RepairPriority = 'low' | 'medium' | 'high';
+export type RepairStatus = 'pending' | 'in_progress' | 'completed';
+
+export interface Repair {
+  id: string;
+  vehicleId: string;
+  type: RepairType;
+  priority: RepairPriority;
+  status: RepairStatus;
+  startDate: string;
+  endDate?: string;
+  cost: number;
+  provider?: string;
+  description: string;
+  partsReplaced?: string;
+  ownerId: string;
+  createdAt: string;
+}
+
+
