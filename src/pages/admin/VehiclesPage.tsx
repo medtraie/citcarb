@@ -174,7 +174,7 @@ export const VehiclesPage: React.FC = () => {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
             Gestion de la Flotte & Engins de Chantier
           </h2>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -341,7 +341,7 @@ export const VehiclesPage: React.FC = () => {
           <div className="modal-content">
             <button className="modal-close" onClick={() => setModalOpen(false)}>&times;</button>
             
-            <h2>{editingVehicle ? 'Modifier le Véhicule / Engin' : 'Nouveau Véhicule / Engin'}</h2>
+            <h2 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontWeight: 800 }}>{editingVehicle ? 'Modifier le Véhicule / Engin' : 'Nouveau Véhicule / Engin'}</h2>
             
             {error && (
               <div style={{

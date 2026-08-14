@@ -146,7 +146,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff' }}>Analytique Active & IA</h1>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)' }}>Analytique Active & IA</h1>
             <span style={{ 
               backgroundColor: 'rgba(0, 210, 255, 0.15)', 
               color: '#00B4DB', 
@@ -225,7 +225,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
             Consommation Moyenne
           </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', margin: '0.25rem 0' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>
             {avgConsoGlobal} <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>L/100km</span>
           </div>
           <span style={{ color: 'var(--accent-green)', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -238,7 +238,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
             Taux d'Anomalie IA
           </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', margin: '0.25rem 0' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>
             {anomalyRate} %
           </div>
           <span style={{ color: Number(anomalyRate) > 5 ? 'var(--accent-red)' : 'var(--accent-green)', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -251,7 +251,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
             Autonomie Citerne
           </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', margin: '0.25rem 0' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>
             {daysLeftTank} <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>Jours</span>
           </div>
           <span style={{ color: daysLeftTank < 5 ? 'var(--accent-red)' : 'var(--accent-orange)', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -264,7 +264,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
             Volume Total Distribué
           </span>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', margin: '0.25rem 0' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>
             {totalVolumeFuel.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>L</span>
           </div>
           <span style={{ color: '#a855f7', fontSize: '0.8rem', fontWeight: 600 }}>
@@ -281,7 +281,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
         <div className="card" style={{ padding: '1.5rem', minHeight: '380px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>Courbe de Distribution Gasoil & Fluides</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Courbe de Distribution Gasoil & Fluides</h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Évolution quotidienne des volumes prélevés (en Litres)</p>
             </div>
           </div>
@@ -359,7 +359,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
       <div className="card" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>Analyse des Véhicules & Détection de Surconsommation</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>Analyse des Véhicules & Détection de Surconsommation</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Classement des véhicules avec suivi d'anomalies de consommation</p>
           </div>
         </div>
@@ -400,11 +400,11 @@ export const ActiveAnalyticsPage: React.FC = () => {
                     <td><strong style={{ color: 'var(--accent-cyan)' }}>{v.plateNumber}</strong></td>
                     <td>{v.brand} {v.model}</td>
                     <td>{v.hasFills ? `${v.currentKm.toLocaleString()} km` : '0 km'}</td>
-                    <td><span style={{ fontWeight: 700, color: v.isAnomalous ? 'var(--accent-red)' : '#fff' }}>{v.hasFills ? `${v.realAvgConso} L/100km` : '0 L/100km'}</span></td>
+                    <td><span style={{ fontWeight: 700, color: v.isAnomalous ? 'var(--accent-red)' : 'var(--text-primary)' }}>{v.hasFills ? `${v.realAvgConso} L/100km` : '0 L/100km'}</span></td>
                     <td>{v.totalVol.toLocaleString()} L</td>
                     <td>
                       {!v.hasFills ? (
-                        <span className="badge" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#64748B' }}>En attente de plein</span>
+                        <span className="badge" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-muted)' }}>En attente de plein</span>
                       ) : v.isAnomalous ? (
                         <span className="badge badge-danger">⚠️ Surconsommation Détectée</span>
                       ) : (
