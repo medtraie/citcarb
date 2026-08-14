@@ -63,9 +63,9 @@ export const BarrelVisualization: React.FC<BarrelVisualizationProps> = ({
 
       // --- 1. Background body ---
       const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.07)');
-      bgGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
-      bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+      bgGrad.addColorStop(0, '#151e31');
+      bgGrad.addColorStop(0.5, '#1e293b');
+      bgGrad.addColorStop(1, '#0b0f19');
 
       ctx.fillStyle = bgGrad;
       ctx.beginPath();

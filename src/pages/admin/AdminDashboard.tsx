@@ -25,7 +25,8 @@ export const AdminDashboard: React.FC = () => {
     loading,
     updateTank,
     updateBarrel,
-    deleteTank
+    deleteTank,
+    deleteBarrel
   } = useDataStore();
 
   const [fuelFillOpen, setFuelFillOpen] = useState(false);
@@ -212,6 +213,11 @@ export const AdminDashboard: React.FC = () => {
                 onConsume={() => setSelectedConsumeBarrel(b)}
                 onRefill={() => setSelectedRefillBarrel(b)}
                 onEdit={() => setSelectedEditBarrel(b)}
+                onDelete={() => {
+                  if (window.confirm(`Êtes-vous sûr de vouloir supprimer le baril "${b.name}" ?`)) {
+                    deleteBarrel(b.id, user.ownerId);
+                  }
+                }}
               />
             ))}
           </div>
