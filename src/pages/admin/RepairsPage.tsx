@@ -174,7 +174,7 @@ export const RepairsPage: React.FC = () => {
       {/* Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
             Gestion des Réparations & Pannes
           </h2>
@@ -183,13 +183,13 @@ export const RepairsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter('all')}
               style={{
-                backgroundColor: statusFilter === 'all' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: statusFilter === 'all' ? 'var(--bg-hover)' : 'var(--bg-card)',
                 color: 'var(--text-primary)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                border: 'none',
+                border: '1px solid var(--border-color)',
                 cursor: 'pointer'
               }}
             >
@@ -199,8 +199,8 @@ export const RepairsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter(statusFilter === 'in_progress' ? 'all' : 'in_progress')}
               style={{
-                backgroundColor: statusFilter === 'in_progress' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(245, 158, 11, 0.2)',
-                color: '#F59E0B',
+                backgroundColor: statusFilter === 'in_progress' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.15)',
+                color: 'var(--accent-orange)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
@@ -215,13 +215,13 @@ export const RepairsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
               style={{
-                backgroundColor: statusFilter === 'pending' ? 'rgba(148, 163, 184, 0.3)' : 'rgba(148, 163, 184, 0.15)',
-                color: '#CBD5E1',
+                backgroundColor: statusFilter === 'pending' ? 'var(--bg-hover)' : 'var(--bg-card)',
+                color: 'var(--text-secondary)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                border: '1px solid rgba(148, 163, 184, 0.3)',
+                border: '1px solid var(--border-color)',
                 cursor: 'pointer'
               }}
             >
@@ -259,8 +259,8 @@ export const RepairsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'list' ? '#1E293B' : 'transparent',
-            color: activeTab === 'list' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'list' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'list' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -278,8 +278,8 @@ export const RepairsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'kanban' ? '#1E293B' : 'transparent',
-            color: activeTab === 'kanban' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'kanban' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'kanban' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'kanban' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -297,8 +297,8 @@ export const RepairsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'analytics' ? '#1E293B' : 'transparent',
-            color: activeTab === 'analytics' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'analytics' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'analytics' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -424,8 +424,8 @@ export const RepairsPage: React.FC = () => {
                           </span>
                         </td>
                         <td>{getPriorityBadge(rep.priority)}</td>
-                        <td style={{ maxWidth: '280px', fontSize: '0.85rem', color: '#CBD5E1' }}>
-                          <div style={{ fontWeight: 600, color: '#fff', marginBottom: '0.2rem' }}>
+                        <td style={{ maxWidth: '280px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
                             {rep.description}
                           </div>
                           {rep.partsReplaced && (
@@ -437,7 +437,7 @@ export const RepairsPage: React.FC = () => {
                         <td style={{ fontSize: '0.85rem' }}>
                           {rep.provider || '-'}
                         </td>
-                        <td style={{ fontWeight: 800, color: '#fff' }}>
+                        <td style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
                           {(rep.cost || 0).toLocaleString()} MAD
                         </td>
                         <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -499,9 +499,9 @@ export const RepairsPage: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
           
           {/* Column 1: Pending */}
-          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'rgba(15, 23, 42, 0.8)', borderTop: '4px solid #CBD5E1' }}>
+          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'var(--bg-input)', borderTop: '4px solid var(--border-color)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                 📥 En attente ({repairs.filter(r => r.status === 'pending').length})
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Signalées</span>
@@ -525,7 +525,7 @@ export const RepairsPage: React.FC = () => {
                     {getPriorityBadge(rep.priority)}
                   </div>
                   
-                  <p style={{ fontSize: '0.85rem', color: '#fff', margin: 0, fontWeight: 500 }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}>
                     {rep.description}
                   </p>
 
@@ -537,7 +537,7 @@ export const RepairsPage: React.FC = () => {
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
                     <button 
                       onClick={() => updateRepair({ ...rep, status: 'in_progress' })}
-                      style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', border: '1px solid #F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#F59E0B', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', border: '1px solid #F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: 'var(--accent-orange)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
                     >
                       → Démarrer 🔧
                     </button>
@@ -548,9 +548,9 @@ export const RepairsPage: React.FC = () => {
           </div>
 
           {/* Column 2: In Progress */}
-          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'rgba(15, 23, 42, 0.8)', borderTop: '4px solid #F59E0B' }}>
+          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'var(--bg-input)', borderTop: '4px solid #F59E0B' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                 🔧 En cours ({repairs.filter(r => r.status === 'in_progress').length})
               </h3>
               <span style={{ fontSize: '0.75rem', color: '#F59E0B', fontWeight: 600 }}>Au garage</span>
@@ -574,7 +574,7 @@ export const RepairsPage: React.FC = () => {
                     {getPriorityBadge(rep.priority)}
                   </div>
                   
-                  <p style={{ fontSize: '0.85rem', color: '#fff', margin: 0, fontWeight: 500 }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}>
                     {rep.description}
                   </p>
 
@@ -590,7 +590,7 @@ export const RepairsPage: React.FC = () => {
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
                     <button 
                       onClick={() => completeRepair(rep.id, user.ownerId)}
-                      style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', border: '1px solid #10B981', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10B981', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '0.35rem', borderRadius: '6px', border: '1px solid #10B981', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-green)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
                     >
                       ✓ Clôturer Réparation
                     </button>
@@ -601,9 +601,9 @@ export const RepairsPage: React.FC = () => {
           </div>
 
           {/* Column 3: Completed */}
-          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'rgba(15, 23, 42, 0.8)', borderTop: '4px solid #10B981' }}>
+          <div className="card" style={{ padding: '1.25rem', backgroundColor: 'var(--bg-input)', borderTop: '4px solid #10B981' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                 ✅ Terminées ({repairs.filter(r => r.status === 'completed').length})
               </h3>
               <span style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>Rétablies</span>
@@ -628,12 +628,12 @@ export const RepairsPage: React.FC = () => {
                     {getStatusBadge(rep.status)}
                   </div>
                   
-                  <p style={{ fontSize: '0.85rem', color: '#CBD5E1', margin: 0 }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
                     {rep.description}
                   </p>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    <span style={{ fontWeight: 700, color: '#fff' }}>💰 {rep.cost.toLocaleString()} MAD</span>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>💰 {rep.cost.toLocaleString()} MAD</span>
                     <span>📅 Fin: {rep.endDate || rep.startDate}</span>
                   </div>
                 </div>
@@ -653,7 +653,7 @@ export const RepairsPage: React.FC = () => {
             
             <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-orange)' }}>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>CUMUL DES RÉPARATIONS (MAD)</span>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: '0.4rem' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.4rem' }}>
                 {totalCost.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--accent-orange)' }}>MAD</span>
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
@@ -698,7 +698,7 @@ export const RepairsPage: React.FC = () => {
             
             {/* Chart 1: Breakdown by repair type */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2.5"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
                 Répartition des Dépenses par Type de Panne
               </h3>
@@ -717,12 +717,12 @@ export const RepairsPage: React.FC = () => {
                           <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: style.color, display: 'inline-block' }} />
                           {getTypeLabel(t)} <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>({count} intervention{count > 1 ? 's' : ''})</span>
                         </span>
-                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
                           {subCost.toLocaleString()} MAD <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>({percent}%)</span>
                         </span>
                       </div>
                       
-                      <div style={{ height: '10px', width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                      <div style={{ height: '10px', width: '100%', backgroundColor: 'var(--bg-input)', borderRadius: '5px', overflow: 'hidden' }}>
                         <div style={{ 
                           height: '100%', 
                           width: `${percent}%`, 
@@ -739,7 +739,7 @@ export const RepairsPage: React.FC = () => {
 
             {/* Chart 2: Repair cost per vehicle */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                 Véhicules les Plus Réparés
               </h3>
@@ -764,7 +764,7 @@ export const RepairsPage: React.FC = () => {
                         <span style={{ fontWeight: 700, color: 'var(--accent-orange)' }}>
                           {v.brand} {v.model} ({v.plateNumber})
                         </span>
-                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
                           {vehCost.toLocaleString()} MAD
                         </span>
                       </div>

@@ -158,7 +158,7 @@ export const RevisionsPage: React.FC = () => {
       {/* Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
             Gestion des Révisions
           </h2>
           
@@ -166,7 +166,7 @@ export const RevisionsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter('all')}
               style={{
-                backgroundColor: statusFilter === 'all' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                backgroundColor: statusFilter === 'all' ? 'var(--bg-hover)' : 'var(--bg-card)',
                 color: 'var(--text-primary)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
@@ -175,7 +175,7 @@ export const RevisionsPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                border: 'none',
+                border: '1px solid var(--border-color)',
                 cursor: 'pointer'
               }}
             >
@@ -185,8 +185,8 @@ export const RevisionsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter(statusFilter === 'due_soon' ? 'all' : 'due_soon')}
               style={{
-                backgroundColor: statusFilter === 'due_soon' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(245, 158, 11, 0.2)',
-                color: '#F59E0B',
+                backgroundColor: statusFilter === 'due_soon' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(245, 158, 11, 0.15)',
+                color: 'var(--accent-orange)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
@@ -201,8 +201,8 @@ export const RevisionsPage: React.FC = () => {
             <button 
               onClick={() => setStatusFilter(statusFilter === 'overdue' ? 'all' : 'overdue')}
               style={{
-                backgroundColor: statusFilter === 'overdue' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.2)',
-                color: '#EF4444',
+                backgroundColor: statusFilter === 'overdue' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.15)',
+                color: 'var(--accent-red)',
                 padding: '0.3rem 0.75rem',
                 borderRadius: '20px',
                 fontSize: '0.8rem',
@@ -222,7 +222,7 @@ export const RevisionsPage: React.FC = () => {
             setRevisionToEdit(null);
             setIsAddModalOpen(true);
           }}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)', color: '#fff' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           Nouvelle révision
@@ -245,8 +245,8 @@ export const RevisionsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'list' ? '#1E293B' : 'transparent',
-            color: activeTab === 'list' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'list' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'list' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'list' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -264,8 +264,8 @@ export const RevisionsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'calendar' ? '#1E293B' : 'transparent',
-            color: activeTab === 'calendar' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'calendar' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'calendar' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'calendar' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -283,8 +283,8 @@ export const RevisionsPage: React.FC = () => {
             padding: '0.5rem 1.25rem',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: activeTab === 'analytics' ? '#1E293B' : 'transparent',
-            color: activeTab === 'analytics' ? '#fff' : 'var(--text-secondary)',
+            backgroundColor: activeTab === 'analytics' ? 'var(--bg-input)' : 'transparent',
+            color: activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-secondary)',
             fontWeight: activeTab === 'analytics' ? 700 : 500,
             fontSize: '0.85rem',
             cursor: 'pointer',
@@ -486,7 +486,7 @@ export const RevisionsPage: React.FC = () => {
               >
                 &lt;
               </button>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', minWidth: '160px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', minWidth: '160px', textAlign: 'center' }}>
                 {monthNames[currentMonth]} {currentYear}
               </h3>
               <button 
@@ -519,7 +519,7 @@ export const RevisionsPage: React.FC = () => {
           }}>
             {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'].map((day, idx) => (
               <div key={idx} style={{
-                backgroundColor: '#0F172A',
+                backgroundColor: 'var(--bg-input)',
                 padding: '0.75rem',
                 textAlign: 'center',
                 fontWeight: 700,
@@ -554,7 +554,7 @@ export const RevisionsPage: React.FC = () => {
                     <span style={{
                       fontWeight: isToday ? 800 : 600,
                       fontSize: '0.85rem',
-                      color: isToday ? 'var(--accent-cyan)' : '#fff',
+                      color: isToday ? 'var(--accent-cyan)' : 'var(--text-primary)',
                       backgroundColor: isToday ? 'var(--accent-cyan-glow)' : 'transparent',
                       width: '24px',
                       height: '24px',
@@ -619,7 +619,7 @@ export const RevisionsPage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-              <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
+              <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                 Filtres Analytiques Télémétriques
               </span>
             </div>
@@ -669,7 +669,7 @@ export const RevisionsPage: React.FC = () => {
                 borderRadius: '20px',
                 fontSize: '0.8rem',
                 fontWeight: 600,
-                border: analyticsTypeFilter === 'all' ? '1px solid var(--accent-cyan)' : '1px solid rgba(255,255,255,0.1)',
+                border: analyticsTypeFilter === 'all' ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
                 backgroundColor: analyticsTypeFilter === 'all' ? 'var(--accent-cyan-glow)' : 'var(--bg-card)',
                 color: analyticsTypeFilter === 'all' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                 cursor: 'pointer',
@@ -708,7 +708,7 @@ export const RevisionsPage: React.FC = () => {
             
             <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid var(--accent-cyan)' }}>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>CUMUL DES COÛTS (MAD)</span>
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', marginTop: '0.4rem' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.4rem' }}>
                 {analyticsTotalCost.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--accent-cyan)' }}>MAD</span>
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
@@ -731,7 +731,7 @@ export const RevisionsPage: React.FC = () => {
               <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981', marginTop: '0.4rem' }}>
                 {analyticsComplianceRate}%
               </div>
-              <div style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginTop: '0.5rem', overflow: 'hidden' }}>
+              <div style={{ height: '6px', backgroundColor: 'var(--bg-input)', borderRadius: '3px', marginTop: '0.5rem', overflow: 'hidden' }}>
                 <div style={{ width: `${analyticsComplianceRate}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '3px' }} />
               </div>
             </div>
@@ -753,7 +753,7 @@ export const RevisionsPage: React.FC = () => {
             
             {/* Chart 1: Cost breakdown by category */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.5"><rect x="3" y="12" width="4" height="9"></rect><rect x="10" y="7" width="4" height="14"></rect><rect x="17" y="3" width="4" height="18"></rect></svg>
                 Répartition Financière par Type de Révision
               </h3>
@@ -785,12 +785,12 @@ export const RevisionsPage: React.FC = () => {
                           <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: style.color, display: 'inline-block' }} />
                           {getTypeLabel(t)} <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>({count} révision{count > 1 ? 's' : ''})</span>
                         </span>
-                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
                           {subCost.toLocaleString()} MAD <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>({percent}%)</span>
                         </span>
                       </div>
                       
-                      <div style={{ height: '10px', width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+                      <div style={{ height: '10px', width: '100%', backgroundColor: 'var(--bg-input)', borderRadius: '5px', overflow: 'hidden' }}>
                         <div style={{ 
                           height: '100%', 
                           width: `${percent}%`, 
@@ -808,7 +808,7 @@ export const RevisionsPage: React.FC = () => {
 
             {/* Chart 2: Cost Breakdown per Vehicle */}
             <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" strokeWidth="2.5"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                 Dépenses par Véhicule
               </h3>
@@ -827,7 +827,7 @@ export const RevisionsPage: React.FC = () => {
                         padding: '0.75rem',
                         borderRadius: '10px',
                         backgroundColor: analyticsVehicleFilter === v.id ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-input)',
-                        border: analyticsVehicleFilter === v.id ? '1px solid var(--accent-cyan)' : '1px solid transparent',
+                        border: analyticsVehicleFilter === v.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                       }}
@@ -836,12 +836,12 @@ export const RevisionsPage: React.FC = () => {
                         <span style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>
                           {v.brand} {v.model} ({v.plateNumber})
                         </span>
-                        <span style={{ fontWeight: 800, color: '#fff' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>
                           {vehCost.toLocaleString()} MAD
                         </span>
                       </div>
                       
-                      <div style={{ height: '6px', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '6px', backgroundColor: 'var(--bg-card)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{ width: `${vehPercent}%`, height: '100%', backgroundColor: 'var(--accent-cyan)', borderRadius: '3px' }} />
                       </div>
 

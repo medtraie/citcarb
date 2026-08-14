@@ -416,16 +416,26 @@ select.form-control {
   appearance: auto;
   -webkit-appearance: auto;
   cursor: pointer;
-  background-color: #1E293B;
-  color: #FFFFFF;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
   padding-right: 2rem;
 }
 
 select.form-control option {
-  background-color: #0F172A;
-  color: #FFFFFF;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   padding: 10px 14px;
   font-size: 0.9rem;
+}
+
+[data-theme="light"] select.form-control option {
+  background-color: #FFFFFF;
+  color: #0F172A;
+}
+
+[data-theme="dark"] select.form-control option {
+  background-color: #0F172A;
+  color: #FFFFFF;
 }
 
 .form-control:focus {
@@ -450,13 +460,14 @@ select.form-control option {
 .table th, .table td {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .table th {
   font-weight: 600;
   color: var(--text-secondary);
   font-size: 0.875rem;
-  background-color: rgba(36, 53, 85, 0.2);
+  background-color: var(--bg-input);
 }
 
 .table tbody tr:last-child td {
@@ -464,7 +475,7 @@ select.form-control option {
 }
 
 .table tbody tr:hover td {
-  background-color: rgba(36, 53, 85, 0.1);
+  background-color: var(--bg-hover);
 }
 
 /* Badges */

@@ -299,11 +299,11 @@ export const ActiveAnalyticsPage: React.FC = () => {
                     <stop offset="95%" stopColor="#FD7E14" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="day" stroke="#64748B" fontSize={12} />
-                <YAxis stroke="#64748B" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                <XAxis dataKey="day" stroke="var(--text-secondary)" fontSize={12} />
+                <YAxis stroke="var(--text-secondary)" fontSize={12} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#1E293B', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', color: '#fff' }}
+                  contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)' }}
                 />
                 <Area type="monotone" dataKey="Gasoil" stroke="#00B4DB" strokeWidth={3} fillOpacity={1} fill="url(#colorGasoil)" />
                 <Area type="monotone" dataKey="Hydraulique" stroke="#FD7E14" strokeWidth={2} fillOpacity={1} fill="url(#colorHyd)" />
@@ -315,7 +315,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
         {/* Vehicle Category Pie Chart */}
         <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginBottom: '0.25rem' }}>Répartition par Catégorie</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Répartition par Catégorie</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Part du carburant consommé par type de véhicule</p>
           </div>
 
@@ -335,7 +335,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1E293B', borderRadius: '8px', color: '#fff' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -347,7 +347,7 @@ export const ActiveAnalyticsPage: React.FC = () => {
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: item.color }} />
                   {item.name}
                 </span>
-                <span style={{ fontWeight: 700, color: '#fff' }}>{item.value}%</span>
+                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{item.value}%</span>
               </div>
             ))}
           </div>
