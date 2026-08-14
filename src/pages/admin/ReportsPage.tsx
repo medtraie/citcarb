@@ -140,18 +140,24 @@ export const ReportsPage: React.FC = () => {
     return b ? (b.type === 'hydraulique' ? 'Hydraulique' : 'Huile Moteur') : 'Inconnu';
   };
 
-  // High-contrast, clean 2026 Executive PDF Exporter
+  // PDF Export with White Mode Override during capture
   const exportPDF = async () => {
     if (!reportRef.current) return;
     setExportingPDF(true);
 
     try {
+      // Apply white print mode class temporarily
+      reportRef.current.classList.add('pdf-export-active');
+
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         backgroundColor: '#FFFFFF',
         logging: false,
         useCORS: true
       });
+
+      // Restore on-screen theme
+      reportRef.current.classList.remove('pdf-export-active');
 
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -183,6 +189,9 @@ export const ReportsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to export PDF:', err);
     } finally {
+      if (reportRef.current) {
+        reportRef.current.classList.remove('pdf-export-active');
+      }
       setExportingPDF(false);
     }
   };
@@ -270,7 +279,7 @@ export const ReportsPage: React.FC = () => {
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)', fontWeight: 700 }}
             disabled={exportingPDF}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
             {exportingPDF ? 'Génération PDF...' : 'Télécharger PDF'}
           </button>
 
@@ -466,103 +475,102 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Printable Executive Document Preview (Designed for high contrast, pure white background printing) */}
+      {/* 3. Printable Executive Document Preview (Adapts to Dark/Light mode on-screen, forces White background on PDF export) */}
       <div 
         ref={reportRef} 
         style={{
           padding: '2.5rem',
-          backgroundColor: '#FFFFFF',
-          color: '#0F172A',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-primary)',
           borderRadius: '16px',
-          border: '1px solid #E2E8F0',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)',
+          border: '1px solid var(--border-color)',
           display: 'flex',
           flexDirection: 'column',
           gap: '2rem'
         }}
       >
         {/* Document Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #0F172A', paddingBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid var(--border-color)', paddingBottom: '1.5rem' }}>
           <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0284C7', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.3rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.3rem' }}>
               FUELFLOW FLEET MANAGEMENT 2026 • RAPPORT OFFICIEL
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#0F172A', margin: 0 }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
               {activeReportType === 'global' && 'Rapport Exécutif Global de la Flotte'}
               {activeReportType === 'gasoil' && 'Rapport de Consommation de Gasoil'}
               {activeReportType === 'huile' && "Rapport de Consommation d'Huiles & Fluides"}
               {activeReportType === 'revision' && 'Rapport des Révisions & Suivis Réglementaires'}
               {activeReportType === 'reparation' && 'Rapport des Réparations & Interventions d\'Urgence'}
             </h1>
-            <p style={{ color: '#475569', fontSize: '0.9rem', marginTop: '0.4rem', margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.4rem', margin: 0 }}>
               Période d'analyse: <strong>{new Date(startDate).toLocaleDateString('fr-FR')}</strong> au <strong>{new Date(endDate).toLocaleDateString('fr-FR')}</strong>
               {selectedVehicleId !== 'all' && ` | Véhicule: ${getVehicleLabel(selectedVehicleId)}`}
             </p>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0F172A' }}>FuelFlow Systems</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '0.2rem' }}>Généré le: {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
-            <div style={{ fontSize: '0.75rem', color: '#0284C7', fontWeight: 700, marginTop: '0.2rem' }}>Édition Certifiée</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>FuelFlow Systems</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Généré le: {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '0.2rem' }}>Édition Certifiée</div>
           </div>
         </div>
 
         {/* 4. KPI CARDS SECTION (Les cartes les KPI) */}
         <div>
-          <h3 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>
+          <h3 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>
             Indicateurs Clés de Performance (KPI Metrics)
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
             
             {/* KPI Card 1 */}
-            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid #0284C7' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            <div className="report-kpi-card" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid var(--accent-cyan)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
                 VOLUME GASOIL
               </div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A' }}>
-                {totalGasoil.toLocaleString()} <span style={{ fontSize: '0.9rem', color: '#0284C7' }}>L</span>
+              <div className="report-kpi-val" style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                {totalGasoil.toLocaleString()} <span style={{ fontSize: '0.9rem', color: 'var(--accent-cyan)' }}>L</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: totalAnomalies > 0 ? '#DC2626' : '#059669', margin: '0.3rem 0 0 0', fontWeight: 600 }}>
+              <p style={{ fontSize: '0.75rem', color: totalAnomalies > 0 ? 'var(--accent-red)' : 'var(--accent-green)', margin: '0.3rem 0 0 0', fontWeight: 600 }}>
                 {totalAnomalies} anomalie(s) détectée(s)
               </p>
             </div>
 
             {/* KPI Card 2 */}
-            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid #EA580C' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            <div className="report-kpi-card" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid var(--accent-orange)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
                 HUILES & FLUIDES
               </div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A' }}>
-                {totalHuiles.toLocaleString()} <span style={{ fontSize: '0.9rem', color: '#EA580C' }}>L</span>
+              <div className="report-kpi-val" style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                {totalHuiles.toLocaleString()} <span style={{ fontSize: '0.9rem', color: 'var(--accent-orange)' }}>L</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '0.3rem 0 0 0' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.3rem 0 0 0' }}>
                 Consommé par les véhicules
               </p>
             </div>
 
             {/* KPI Card 3 */}
-            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid #2563EB' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            <div className="report-kpi-card" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid #2563EB' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
                 BUDGET RÉVISIONS
               </div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A' }}>
+              <div className="report-kpi-val" style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
                 {totalRevisionCost.toLocaleString()} <span style={{ fontSize: '0.9rem', color: '#2563EB' }}>MAD</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '0.3rem 0 0 0' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0.3rem 0 0 0' }}>
                 {filteredRevisions.length} opérations suivies
               </p>
             </div>
 
             {/* KPI Card 4 */}
-            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid #DC2626' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+            <div className="report-kpi-card" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.25rem', borderLeft: '5px solid var(--accent-red)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
                 COÛT RÉPARATIONS
               </div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A' }}>
-                {totalRepairCost.toLocaleString()} <span style={{ fontSize: '0.9rem', color: '#DC2626' }}>MAD</span>
+              <div className="report-kpi-val" style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                {totalRepairCost.toLocaleString()} <span style={{ fontSize: '0.9rem', color: 'var(--accent-red)' }}>MAD</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#DC2626', margin: '0.3rem 0 0 0', fontWeight: 600 }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--accent-red)', margin: '0.3rem 0 0 0', fontWeight: 600 }}>
                 {filteredRepairs.filter(r => r.priority === 'high').length} urgence(s) enregistrée(s)
               </p>
             </div>
@@ -575,38 +583,38 @@ export const ReportsPage: React.FC = () => {
         {/* Section Gasoil */}
         {(activeReportType === 'gasoil' || activeReportType === 'global') && (
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               ⛽ 1. Relevé des Ravitaillements en Gasoil ({filteredFills.length} opérations)
             </h3>
             {filteredFills.length === 0 ? (
-              <p style={{ fontSize: '0.85rem', color: '#64748B', fontStyle: 'italic' }}>Aucune consommation enregistrée pour cette période.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Aucune consommation enregistrée pour cette période.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+              <table className="table" style={{ width: '100%', fontSize: '0.8rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#F1F5F9', borderBottom: '2px solid #CBD5E1' }}>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Date & Heure</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Véhicule</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Chauffeur</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Quantité</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Compteur</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Consommation</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Statut IA</th>
+                  <tr>
+                    <th>Date & Heure</th>
+                    <th>Véhicule</th>
+                    <th>Chauffeur</th>
+                    <th>Quantité</th>
+                    <th>Compteur</th>
+                    <th>Consommation</th>
+                    <th>Statut IA</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredFills.map((f, i) => (
-                    <tr key={f.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                  {filteredFills.map((f) => (
+                    <tr key={f.id}>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{new Date(f.createdAt).toLocaleString('fr-FR')}</td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: '#0284C7' }}>{getVehicleLabel(f.vehicleId)}</td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>{getVehicleLabel(f.vehicleId)}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{getDriverLabel(f.driverId)}</td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: '#0F172A' }}>{f.quantity} L</td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{f.quantity} L</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{f.mileage.toLocaleString()} km</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{f.calculatedConsumption ? `${f.calculatedConsumption.toFixed(1)} L/100` : '-'}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>
                         {f.anomalyDetected ? (
-                          <span style={{ backgroundColor: '#FEE2E2', color: '#DC2626', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>⚠️ Anomalie</span>
+                          <span style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--accent-red)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>⚠️ Anomalie</span>
                         ) : (
-                          <span style={{ backgroundColor: '#D1FAE5', color: '#059669', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>✓ Normal</span>
+                          <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', color: 'var(--accent-green)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>✓ Normal</span>
                         )}
                       </td>
                     </tr>
@@ -620,33 +628,33 @@ export const ReportsPage: React.FC = () => {
         {/* Section Huiles */}
         {(activeReportType === 'huile' || activeReportType === 'global') && (
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               🛢️ 2. Mouvements d'Huiles & Fluides ({filteredMovements.length} opérations)
             </h3>
             {filteredMovements.length === 0 ? (
-              <p style={{ fontSize: '0.85rem', color: '#64748B', fontStyle: 'italic' }}>Aucune consommation d'huile enregistrée pour cette période.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Aucune consommation d'huile enregistrée pour cette période.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+              <table className="table" style={{ width: '100%', fontSize: '0.8rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#F1F5F9', borderBottom: '2px solid #CBD5E1' }}>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Date & Heure</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Baril</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Type</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Opération</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Quantité</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Véhicule Destinataire</th>
+                  <tr>
+                    <th>Date & Heure</th>
+                    <th>Baril</th>
+                    <th>Type</th>
+                    <th>Opération</th>
+                    <th>Quantité</th>
+                    <th>Véhicule Destinataire</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMovements.map((m, i) => (
-                    <tr key={m.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                  {filteredMovements.map((m) => (
+                    <tr key={m.id}>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{new Date(m.createdAt).toLocaleString('fr-FR')}</td>
                       <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700 }}>{getBarrelName(m.barrelId)}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{getBarrelTypeLabel(m.barrelId)}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>
                         {m.type === 'refill' ? 'Ravitaillement' : 'Consommation'}
                       </td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: m.type === 'refill' ? '#059669' : '#EA580C' }}>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: m.type === 'refill' ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
                         {m.type === 'refill' ? '+' : '-'}{m.quantity} L
                       </td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{getVehicleLabel(m.vehicleId)}</td>
@@ -661,31 +669,31 @@ export const ReportsPage: React.FC = () => {
         {/* Section Révisions */}
         {(activeReportType === 'revision' || activeReportType === 'global') && (
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               🛠️ 3. Révisions & Suivis Réglementaires ({filteredRevisions.length} enregistrements)
             </h3>
             {filteredRevisions.length === 0 ? (
-              <p style={{ fontSize: '0.85rem', color: '#64748B', fontStyle: 'italic' }}>Aucune révision répertoriée pour cette période.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Aucune révision répertoriée pour cette période.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+              <table className="table" style={{ width: '100%', fontSize: '0.8rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#F1F5F9', borderBottom: '2px solid #CBD5E1' }}>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Véhicule</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Catégorie</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Mode Suivi</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Dernier Contrôle</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Prochaine Échéance</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Coût (MAD)</th>
+                  <tr>
+                    <th>Véhicule</th>
+                    <th>Catégorie</th>
+                    <th>Mode Suivi</th>
+                    <th>Dernier Contrôle</th>
+                    <th>Prochaine Échéance</th>
+                    <th>Coût (MAD)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRevisions.map((rev, i) => (
-                    <tr key={rev.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: '#0F172A' }}>{getVehicleLabel(rev.vehicleId)}</td>
+                  {filteredRevisions.map((rev) => (
+                    <tr key={rev.id}>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{getVehicleLabel(rev.vehicleId)}</td>
                       <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>{rev.type}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{rev.mode === 'days' ? 'Par Jours' : 'Par Kilométrage'}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{rev.lastDate || `${rev.lastKm || 0} km`}</td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: '#2563EB' }}>{rev.nextDueDate || `${rev.nextDueKm || 0} km`}</td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>{rev.nextDueDate || `${rev.nextDueKm || 0} km`}</td>
                       <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800 }}>{(rev.cost || 0).toLocaleString()} MAD</td>
                     </tr>
                   ))}
@@ -698,40 +706,40 @@ export const ReportsPage: React.FC = () => {
         {/* Section Réparations */}
         {(activeReportType === 'reparation' || activeReportType === 'global') && (
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '1rem', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               🔧 4. Interventions de Réparation & Pannes ({filteredRepairs.length} interventions)
             </h3>
             {filteredRepairs.length === 0 ? (
-              <p style={{ fontSize: '0.85rem', color: '#64748B', fontStyle: 'italic' }}>Aucune réparation enregistrée pour cette période.</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Aucune réparation enregistrée pour cette période.</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+              <table className="table" style={{ width: '100%', fontSize: '0.8rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#F1F5F9', borderBottom: '2px solid #CBD5E1' }}>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Date Début</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Véhicule</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Type Panne</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Description</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Garage</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Coût (MAD)</th>
-                    <th style={{ padding: '0.6rem 0.8rem', color: '#475569' }}>Statut</th>
+                  <tr>
+                    <th>Date Début</th>
+                    <th>Véhicule</th>
+                    <th>Type Panne</th>
+                    <th>Description</th>
+                    <th>Garage</th>
+                    <th>Coût (MAD)</th>
+                    <th>Statut</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRepairs.map((rep, i) => (
-                    <tr key={rep.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                  {filteredRepairs.map((rep) => (
+                    <tr key={rep.id}>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{rep.startDate}</td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: '#EA580C' }}>{getVehicleLabel(rep.vehicleId)}</td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 700, color: 'var(--accent-orange)' }}>{getVehicleLabel(rep.vehicleId)}</td>
                       <td style={{ padding: '0.6rem 0.8rem', textTransform: 'capitalize' }}>{rep.type}</td>
                       <td style={{ padding: '0.6rem 0.8rem', maxWidth: '220px' }}>{rep.description}</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>{rep.provider || '-'}</td>
-                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: '#0F172A' }}>{(rep.cost || 0).toLocaleString()} MAD</td>
+                      <td style={{ padding: '0.6rem 0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>{(rep.cost || 0).toLocaleString()} MAD</td>
                       <td style={{ padding: '0.6rem 0.8rem' }}>
                         {rep.status === 'completed' ? (
-                          <span style={{ backgroundColor: '#D1FAE5', color: '#059669', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>✅ Terminé</span>
+                          <span style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', color: 'var(--accent-green)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>✅ Terminé</span>
                         ) : rep.status === 'in_progress' ? (
-                          <span style={{ backgroundColor: '#FEF3C7', color: '#D97706', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>🔧 En cours</span>
+                          <span style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: 'var(--accent-orange)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>🔧 En cours</span>
                         ) : (
-                          <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>📥 En attente</span>
+                          <span style={{ backgroundColor: 'rgba(148, 163, 184, 0.2)', color: 'var(--text-secondary)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700, fontSize: '0.7rem' }}>📥 En attente</span>
                         )}
                       </td>
                     </tr>
@@ -747,23 +755,26 @@ export const ReportsPage: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
-          borderTop: '2px solid #E2E8F0',
+          borderTop: '2px solid var(--border-color)',
           paddingTop: '1.5rem',
           marginTop: '1.5rem'
         }}>
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0F172A' }}>Direction de la Flotte FuelFlow</div>
-            <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>Document officiel d'audit interne</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Direction de la Flotte FuelFlow</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Document officiel d'audit interne</div>
           </div>
-          <div style={{
-            border: '1px dashed #CBD5E1',
-            borderRadius: '8px',
-            padding: '1rem 2rem',
-            textAlign: 'center',
-            minWidth: '220px',
-            backgroundColor: '#F8FAFC'
-          }}>
-            <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Signature & Cachet Officiel</div>
+          <div 
+            className="report-sig-box"
+            style={{
+              border: '1px dashed var(--border-color)',
+              borderRadius: '8px',
+              padding: '1rem 2rem',
+              textAlign: 'center',
+              minWidth: '220px',
+              backgroundColor: 'var(--bg-input)'
+            }}
+          >
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Signature & Cachet Officiel</div>
             <div style={{ height: '35px' }} />
           </div>
         </div>
