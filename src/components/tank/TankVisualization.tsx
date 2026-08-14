@@ -66,11 +66,11 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
       const isLowStock = currentVolume <= alertThreshold;
       const percent = Math.round(fillRatio * 100);
 
-      // --- 1. Outer steel/glass container background ---
+      // --- 1. Outer steel/glass container background (Rich dark metallic background for 100% contrast in Light & Dark Mode) ---
       const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-      bgGrad.addColorStop(0, 'rgba(255, 255, 255, 0.06)');
-      bgGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
-      bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+      bgGrad.addColorStop(0, '#151e31');
+      bgGrad.addColorStop(0.5, '#1e293b');
+      bgGrad.addColorStop(1, '#0b0f19');
 
       ctx.fillStyle = bgGrad;
       ctx.beginPath();
@@ -78,9 +78,9 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
       ctx.fill();
 
       // --- 2. Interior grid/measurement ticks ---
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.lineWidth = 1;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
       ctx.font = 'bold 9px "Outfit", sans-serif';
 
       for (let i = 1; i <= 4; i++) {
@@ -100,7 +100,7 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
 
       // --- 3. Alert Threshold Line ---
       const alertY = height * (1 - alertThreshold / capacity);
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
@@ -158,7 +158,7 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
         ctx.fill();
 
         // C. Light reflection outline on liquid surface
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.lineWidth = 2.0;
         ctx.beginPath();
         ctx.moveTo(0, baseHeight - 6 * Math.sin(-wavePhase));
@@ -169,7 +169,7 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
         ctx.stroke();
 
         // D. Floating bubbles
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
         bubbles.forEach(b => {
           b.yOffset = (b.yOffset - b.speed) % liquidHeight;
           if (b.yOffset < 0) b.yOffset = liquidHeight;
@@ -214,10 +214,10 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
 
       // --- 6. Metallic outer border ---
       const borderGrad = ctx.createLinearGradient(0, 0, width, height);
-      borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-      borderGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.08)');
+      borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+      borderGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.1)');
       borderGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.4)');
-      borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+      borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
 
       ctx.strokeStyle = borderGrad;
       ctx.lineWidth = 2.0;
@@ -225,12 +225,15 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
       ctx.roundRect(0, 0, width, height, 24);
       ctx.stroke();
 
-      // --- 7. Digital Percentage Overlay in the center ---
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.font = 'bold 32px "Outfit", sans-serif';
+      // --- 7. Digital Percentage Overlay in the center (High contrast bold text with drop shadow) ---
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 34px "Outfit", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${percent}%`, width / 2, height / 2);
+      ctx.shadowBlur = 0; // Reset shadow for other drawings
 
       // Increment wave phase
       wavePhase += 0.035;
@@ -254,8 +257,8 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
           height: `${height}px`,
           borderRadius: '24px',
           boxShadow: isLowStock 
-            ? '0 0 35px rgba(239, 68, 68, 0.25)' 
-            : '0 12px 24px rgba(0, 0, 0, 0.35)',
+            ? '0 0 35px rgba(239, 68, 68, 0.3)' 
+            : '0 12px 24px rgba(0, 0, 0, 0.25)',
           border: isLowStock ? '1px solid rgba(239, 68, 68, 0.5)' : 'none',
           transition: 'all 0.3s'
         }}
@@ -276,8 +279,8 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
           marginTop: '1.25rem',
           padding: '0.5rem 1.25rem',
           borderRadius: '12px',
-          backgroundColor: isLowStock ? 'var(--accent-red-glow)' : 'var(--accent-cyan-glow)',
-          border: `1px solid ${isLowStock ? 'rgba(239, 68, 68, 0.3)' : 'rgba(0, 210, 255, 0.3)'}`,
+          backgroundColor: isLowStock ? 'var(--accent-red-glow)' : 'var(--bg-input)',
+          border: `1px solid ${isLowStock ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-color)'}`,
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem'
@@ -300,8 +303,8 @@ export const TankVisualization: React.FC<TankVisualizationProps> = ({
         <span 
           style={{
             fontSize: '0.95rem',
-            fontWeight: 700,
-            color: isLowStock ? 'var(--accent-red)' : '#fff'
+            fontWeight: 800,
+            color: isLowStock ? 'var(--accent-red)' : 'var(--text-primary)'
           }}
         >
           {Math.round(currentVolume).toLocaleString()} / {Math.round(capacity).toLocaleString()} L
