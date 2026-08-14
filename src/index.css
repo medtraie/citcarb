@@ -634,3 +634,12 @@ select.form-control option {
   background-color: #F8FAFC !important;
   border-color: #CBD5E1 !important;
 }
+
+/* Signature footer: Hidden on web screen, visible only during PDF capture */
+.report-signature-footer {
+  display: none !important;
+}
+
+.pdf-export-active .report-signature-footer {
+  display: flex !important;
+}

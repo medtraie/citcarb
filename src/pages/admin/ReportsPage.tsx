@@ -750,15 +750,17 @@ export const ReportsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Footer Signature Block for Official Reports */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          borderTop: '2px solid var(--border-color)',
-          paddingTop: '1.5rem',
-          marginTop: '1.5rem'
-        }}>
+        {/* Footer Signature Block for Official Reports (Visible only in PDF Export) */}
+        <div 
+          className="report-signature-footer"
+          style={{
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+            borderTop: '2px solid var(--border-color)',
+            paddingTop: '1.5rem',
+            marginTop: '1.5rem'
+          }}
+        >
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Direction de la Flotte FuelFlow</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Document officiel d'audit interne</div>
