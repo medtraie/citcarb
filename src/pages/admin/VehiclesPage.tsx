@@ -106,8 +106,8 @@ export const VehiclesPage: React.FC = () => {
       return;
     }
 
-    const finalType = (type === 'Camionette' || type === 'Camion') ? `${type} (${tonnage}T)` : type;
-    const tonnageNum = (type === 'Camionette' || type === 'Camion') ? parseFloat(tonnage) : undefined;
+    const finalType = type === 'Camionette' ? `${type} (${tonnage}T)` : type;
+    const tonnageNum = type === 'Camionette' ? parseFloat(tonnage) : undefined;
 
     setSubmitting(true);
     try {
@@ -395,7 +395,7 @@ export const VehiclesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: (type === 'Camionette' || type === 'Camion') ? '1fr 1fr 1fr' : '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: type === 'Camionette' ? '1fr 1fr 1fr' : '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Catégories</label>
                   <select 
@@ -406,13 +406,13 @@ export const VehiclesPage: React.FC = () => {
                   >
                     <option value="Voiture">Voiture</option>
                     <option value="Camionette">Camionette</option>
-                    <option value="Camion">Camion</option>
+                    <option value="Remorque">Remorque</option>
                     <option value="Engins">Engins</option>
                     <option value="Autre">Autre</option>
                   </select>
                 </div>
 
-                {(type === 'Camionette' || type === 'Camion') && (
+                {type === 'Camionette' && (
                   <div className="form-group">
                     <label className="form-label">Tonnage (Tonne)</label>
                     <select 
