@@ -23,7 +23,9 @@ export const ReportsPage: React.FC = () => {
     fetchRevisions,
     fetchVehicles,
     fetchDrivers,
-    fetchBarrels
+    fetchBarrels,
+    fetchTank,
+    fetchTankMovements
   } = useDataStore();
 
   const reportRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,8 @@ export const ReportsPage: React.FC = () => {
       fetchVehicles(user.ownerId);
       fetchDrivers(user.ownerId);
       fetchBarrels(user.ownerId);
+      fetchTank(user.ownerId);
+      fetchTankMovements(user.ownerId);
     }
   }, [user]);
 

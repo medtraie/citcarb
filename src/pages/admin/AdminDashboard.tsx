@@ -11,6 +11,7 @@ import { EditTankDialog } from '../../components/forms/EditTankDialog';
 import { ConsumeDialog } from '../../components/barrels/ConsumeDialog';
 import { RefillDialog } from '../../components/barrels/RefillDialog';
 import { EditBarrelDialog } from '../../components/barrels/EditBarrelDialog';
+import { TankReportModal } from '../../components/tank/TankReportModal';
 import { Barrel } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
@@ -33,6 +34,7 @@ export const AdminDashboard: React.FC = () => {
   const [tankRefillOpen, setTankRefillOpen] = useState(false);
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [editTankOpen, setEditTankOpen] = useState(false);
+  const [tankReportOpen, setTankReportOpen] = useState(false);
   const [selectedConsumeBarrel, setSelectedConsumeBarrel] = useState<Barrel | null>(null);
   const [selectedRefillBarrel, setSelectedRefillBarrel] = useState<Barrel | null>(null);
   const [selectedEditBarrel, setSelectedEditBarrel] = useState<Barrel | null>(null);
@@ -117,6 +119,15 @@ export const AdminDashboard: React.FC = () => {
 
         <button 
           className="btn btn-secondary"
+          onClick={() => setTankReportOpen(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'var(--accent-orange)', color: 'var(--accent-orange)', fontWeight: 700 }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          Rapport Citerne PDF
+        </button>
+
+        <button 
+          className="btn btn-secondary"
           onClick={() => setAddAgentOpen(true)}
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto' }}
         >
@@ -167,7 +178,15 @@ export const AdminDashboard: React.FC = () => {
               Niveau de Citerne Principal (Gasoil)
             </h2>
             {tank && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  className="btn-icon"
+                  onClick={() => setTankReportOpen(true)}
+                  title="Générer le Rapport Citerne PDF"
+                  style={{ color: 'var(--accent-orange)', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                </button>
                 <button
                   className="btn-icon"
                   onClick={() => setEditTankOpen(true)}
@@ -331,6 +350,11 @@ export const AdminDashboard: React.FC = () => {
       <AddAgentDialog 
         isOpen={addAgentOpen}
         onClose={() => setAddAgentOpen(false)}
+      />
+
+      <TankReportModal 
+        isOpen={tankReportOpen}
+        onClose={() => setTankReportOpen(false)}
       />
 
     </div>

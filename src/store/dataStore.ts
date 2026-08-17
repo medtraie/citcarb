@@ -58,6 +58,7 @@ interface DataState {
     performedBy: string;
     ownerId: string;
   }) => Promise<void>;
+  fetchTankMovements: (ownerId: string) => Promise<void>;
 
   // Barrels
   fetchBarrels: (ownerId: string) => Promise<void>;
@@ -418,7 +419,8 @@ export const useDataStore = create<DataState>((set, get) => ({
         get().fetchFuelFills(ownerId),
         get().fetchNotifications(ownerId),
         get().fetchRevisions(ownerId),
-        get().fetchRepairs(ownerId)
+        get().fetchRepairs(ownerId),
+        get().fetchTankMovements(ownerId)
       ]);
       set({ loading: false });
     } catch (err: any) {
@@ -860,9 +862,47 @@ export const useDataStore = create<DataState>((set, get) => ({
         if (tankError) throw tankError;
         set({ tank: { ...currentTank, currentVolume: newVolume } });
       }
+
+      await get().fetchTankMovements(ownerId);
     } catch (err: any) {
       set({ error: err.message });
       throw err;
+    }
+  },
+
+  fetchTankMovements: async (ownerId) => {
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      set({ tankMovements: demo.tankMovements || [] });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tank_movements')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const mappedMovements: TankMovement[] = data.map((d: any) => ({
+          id: d.id,
+          tankId: d.tank_id,
+          type: d.type,
+          quantity: Math.abs(Number(d.quantity)),
+          supplier: d.supplier || undefined,
+          price: d.price ? Number(d.price) : undefined,
+          notes: d.notes || undefined,
+          performedBy: d.performed_by,
+          ownerId: d.owner_id,
+          createdAt: d.created_at
+        }));
+        set({ tankMovements: mappedMovements });
+      }
+    } catch (err: any) {
+      console.error('Error fetching tank movements:', err);
     }
   },
 
