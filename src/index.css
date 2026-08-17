@@ -595,39 +595,52 @@ select.form-control option {
 .pdf-export-active {
   background-color: #FFFFFF !important;
   color: #0F172A !important;
-  border-color: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
   box-shadow: none !important;
 }
 
 .pdf-export-active h1,
 .pdf-export-active h2,
 .pdf-export-active h3,
-.pdf-export-active h4,
-.pdf-export-active p,
-.pdf-export-active span,
-.pdf-export-active div,
-.pdf-export-active td {
+.pdf-export-active h4 {
   color: #0F172A !important;
+}
+
+.pdf-export-active p,
+.pdf-export-active span.text-muted,
+.pdf-export-active .text-secondary {
+  color: #475569 !important;
 }
 
 .pdf-export-active .report-kpi-card {
   background-color: #F8FAFC !important;
-  border-color: #E2E8F0 !important;
+  border: 1px solid #E2E8F0 !important;
 }
 
 .pdf-export-active .report-kpi-val {
   color: #0F172A !important;
 }
 
+.pdf-export-active table {
+  background-color: #FFFFFF !important;
+  border-collapse: collapse !important;
+}
+
 .pdf-export-active table th {
   background-color: #F1F5F9 !important;
-  color: #475569 !important;
-  border-bottom-color: #CBD5E1 !important;
+  color: #334155 !important;
+  border-bottom: 2px solid #CBD5E1 !important;
+  font-weight: 700 !important;
 }
 
 .pdf-export-active table td {
   color: #0F172A !important;
-  border-bottom-color: #E2E8F0 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background-color: #FFFFFF !important;
+}
+
+.pdf-export-active table tr:nth-child(even) td {
+  background-color: #F8FAFC !important;
 }
 
 .pdf-export-active .report-sig-box {
