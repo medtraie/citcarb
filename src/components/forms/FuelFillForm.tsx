@@ -37,7 +37,6 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
   }, [user]);
 
   const selectedVehicle = vehicles.find(v => v.id === vehicleId);
-  const isEngin = selectedVehicle?.type?.toLowerCase().includes('engin');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,15 +57,12 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
     }
 
     if (isNaN(mil) || mil < 0) {
-      setError(isEngin ? 'Veuillez entrer un nombre d\'heures valide.' : 'Veuillez entrer un kilométrage valide.');
+      setError('Veuillez entrer un kilométrage valide.');
       return;
     }
 
     if (selectedVehicle && mil <= selectedVehicle.currentMileage) {
-      setError(isEngin 
-        ? `Les heures saisies (${mil} h) doivent être supérieures aux heures actuelles de l'engin (${selectedVehicle.currentMileage} h).`
-        : `Le kilométrage saisi (${mil} km) doit être supérieur au kilométrage actuel du véhicule (${selectedVehicle.currentMileage} km).`
-      );
+      setError(`Le kilométrage saisi (${mil} km) doit être supérieur au kilométrage actuel (${selectedVehicle.currentMileage} km).`);
       return;
     }
 
@@ -175,13 +171,11 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
       </div>
 
       <div className="form-group">
-        <label className="form-label">
-          {isEngin ? "Heures d'utilisation / Compteur (h)" : "Kilométrage actuel (km)"}
-        </label>
+        <label className="form-label">Kilométrage actuel (km)</label>
         <input 
           type="number" 
-          className="form-control"
-          placeholder={isEngin ? "Nombre d'heures au compteur (Ex: 4500 h)" : "Kilométrage du compteur (Ex: 85000 km)"}
+          className="form-control" 
+          placeholder="Kilométrage du compteur (Ex: 85000 km)"
           min="1"
           value={mileage}
           onChange={(e) => setMileage(e.target.value)}
@@ -189,9 +183,7 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
         />
         {selectedVehicle && (
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
-            {isEngin 
-              ? `Dernières heures enregistrées: ${selectedVehicle.currentMileage} h`
-              : `Dernier kilométrage enregistré: ${selectedVehicle.currentMileage} km`}
+            Dernier kilométrage enregistré: {selectedVehicle.currentMileage} km
           </span>
         )}
       </div>

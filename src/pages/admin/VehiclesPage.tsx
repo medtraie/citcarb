@@ -264,7 +264,7 @@ export const VehiclesPage: React.FC = () => {
             )}
           </div>
 
-          {/* Table 2: Engins & Équipements de Chantier (Consommation en Litres par jour L/j) */}
+          {/* Table 2: Engins & Équipements de Chantier */}
           <div className="card" style={{ padding: '1.25rem', borderTop: '3px solid var(--accent-orange)' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-orange)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
@@ -283,8 +283,8 @@ export const VehiclesPage: React.FC = () => {
                       <th>Identification / Matricule</th>
                       <th>Marque & Modèle</th>
                       <th>Catégorie</th>
-                      <th>Heures de Travail</th>
-                      <th>Cons. Moy. (L/j)</th>
+                      <th>Kilométrage</th>
+                      <th>Cons. Moy. (L/100km)</th>
                       <th>Conducteur / Opérateur</th>
                       <th>Statut</th>
                       <th style={{ textAlign: 'right' }}>Actions</th>
@@ -296,8 +296,8 @@ export const VehiclesPage: React.FC = () => {
                         <td style={{ fontWeight: 700, color: 'var(--accent-orange)' }}>{v.plateNumber}</td>
                         <td style={{ fontWeight: 600 }}>{v.brand} {v.model} ({v.year})</td>
                         <td style={{ color: 'var(--text-secondary)' }}>Engins</td>
-                        <td style={{ fontWeight: 600 }}>{v.currentMileage.toLocaleString()} h</td>
-                        <td style={{ fontWeight: 700, color: 'var(--accent-orange)' }}>{v.avgConsumption} L/j</td>
+                        <td>{v.currentMileage.toLocaleString()} km</td>
+                        <td style={{ fontWeight: 600 }}>{v.avgConsumption} L/100km</td>
                         <td>{getDriverName(v.driverId)}</td>
                         <td>
                           <span className={getStatusBadgeClass(v.status)}>
@@ -445,26 +445,22 @@ export const VehiclesPage: React.FC = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">
-                    {type === 'Engins' ? "Heures d'utilisation / Compteur (h)" : "Kilométrage actuel (km)"}
-                  </label>
+                  <label className="form-label">Kilométrage actuel (km)</label>
                   <input 
                     type="number" 
-                    className="form-control"
-                    placeholder={type === 'Engins' ? "Ex: 4500 h" : "Ex: 85000"}
+                    className="form-control" 
+                    placeholder="Ex: 85000"
                     value={currentMileage}
                     onChange={(e) => setCurrentMileage(e.target.value)}
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">
-                    {type === 'Engins' ? "Consommation moy. (L/j)" : "Consommation moy. (L/100km)"}
-                  </label>
+                  <label className="form-label">Consommation moy. (L/100km)</label>
                   <input 
                     type="number" 
-                    className="form-control"
-                    placeholder={type === 'Engins' ? "Ex: 85 (Litres par jour)" : "Ex: 6.5"}
+                    className="form-control" 
+                    placeholder="Ex: 6.5"
                     step="0.1"
                     value={avgConsumption}
                     onChange={(e) => setAvgConsumption(e.target.value)}
