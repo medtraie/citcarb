@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import logoImg from '../assets/logo.png';
+import { Interactive3DLogo } from '../components/common/Interactive3DLogo';
 
 export const Login: React.FC = () => {
   const { user, login, loading, error, checkSession } = useAuthStore();
@@ -100,21 +100,12 @@ export const Login: React.FC = () => {
         textAlign: 'center',
         backdropFilter: 'blur(8px)'
       }}>
-        <img 
-          src={logoImg} 
-          alt="SFTFUEL Logo" 
-          style={{
-            width: '85px',
-            height: '85px',
-            borderRadius: '20px',
-            objectFit: 'contain',
-            marginBottom: '1rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
-          }}
-        />
+        <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+          <Interactive3DLogo size={90} />
+        </div>
         
-        <h2 style={{ fontSize: '1.85rem', fontWeight: 800, marginBottom: '0.25rem', color: '#fff', letterSpacing: '0.05em' }}>
-          SFTFUEL
+        <h2 style={{ fontSize: '1.95rem', fontWeight: 900, marginBottom: '0.35rem', color: '#fff', letterSpacing: '0.08em' }}>
+          SFT FUEL
         </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
           Système de Gestion de Carburant & Fluides

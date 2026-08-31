@@ -3,6 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import logoImg from '../../assets/logo.png';
 
+import { Interactive3DLogo } from '../common/Interactive3DLogo';
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,9 +23,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-      <div className="sidebar-header">
-        <img src={logoImg} alt="SFTFUEL Logo" className="app-logo" style={{ objectFit: 'contain' }} />
-        <span className="sidebar-title">SFTFUEL</span>
+      <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <Interactive3DLogo size={42} />
+        <span className="sidebar-title" style={{ letterSpacing: '0.08em', fontWeight: 900 }}>SFT FUEL</span>
       </div>
 
       <nav className="sidebar-menu">
