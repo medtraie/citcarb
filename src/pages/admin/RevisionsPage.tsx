@@ -216,19 +216,17 @@ export const RevisionsPage: React.FC = () => {
           </div>
         </div>
 
-        {user.role === 'admin' && (
-          <button 
-            className="btn btn-primary"
-            onClick={() => {
-              setRevisionToEdit(null);
-              setIsAddModalOpen(true);
-            }}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)', color: '#fff' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Nouvelle révision
-          </button>
-        )}
+        <button 
+          className="btn btn-primary"
+          onClick={() => {
+            setRevisionToEdit(null);
+            setIsAddModalOpen(true);
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)', color: '#fff' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nouvelle révision
+        </button>
       </div>
 
       {/* Navigation Tabs */}
