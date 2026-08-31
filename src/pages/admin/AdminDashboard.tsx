@@ -109,8 +109,106 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
       
+      {/* 1. TOP PRIORITY: Pending Validation Section for Admin */}
+      {user.role === 'admin' && pendingFuelFills.length > 0 && (
+        <div className="card" style={{ 
+          padding: '1.5rem', 
+          borderLeft: '6px solid var(--accent-orange)', 
+          backgroundColor: 'rgba(245, 158, 11, 0.06)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 30px rgba(245, 158, 11, 0.18)',
+          border: '1px solid rgba(245, 158, 11, 0.35)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                color: 'var(--accent-orange)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+              </div>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--accent-orange)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  Pleins de Carburant en Attente de Validation
+                  <span style={{ backgroundColor: 'var(--accent-orange)', color: '#fff', fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
+                    {pendingFuelFills.length}
+                  </span>
+                </h2>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Saisis par les agents : la quantité a été déduite de la citerne. Vérifiez les compteurs et quantités pour finaliser.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="table-responsive">
+            <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
+              <thead>
+                <tr style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <th style={{ padding: '0.5rem 1rem' }}>Date & Heure</th>
+                  <th style={{ padding: '0.5rem 1rem' }}>Véhicule / Engin</th>
+                  <th style={{ padding: '0.5rem 1rem' }}>Chauffeur</th>
+                  <th style={{ padding: '0.5rem 1rem' }}>Quantité Déduite</th>
+                  <th style={{ padding: '0.5rem 1rem' }}>Kilométrage Compteur</th>
+                  <th style={{ padding: '0.5rem 1rem', textAlign: 'right' }}>Actions Administrateur</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingFuelFills.map(f => (
+                  <tr key={f.id} style={{ backgroundColor: 'var(--bg-card)', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                    <td style={{ padding: '0.85rem 1rem', fontSize: '0.85rem', fontWeight: 500 }}>{formatDate(f.createdAt)}</td>
+                    <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{getVehicleLabel(f.vehicleId)}</td>
+                    <td style={{ padding: '0.85rem 1rem' }}>{getDriverLabel(f.driverId)}</td>
+                    <td style={{ padding: '0.85rem 1rem' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--accent-cyan)', fontSize: '1.05rem', backgroundColor: 'rgba(0, 210, 255, 0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+                        {f.quantity} L
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.85rem 1rem', fontWeight: 700 }}>{f.mileage.toLocaleString()} km</td>
+                    <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
+                        <button 
+                          className="btn"
+                          style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', backgroundColor: 'rgba(0, 210, 255, 0.12)', color: 'var(--accent-cyan)', border: '1px solid rgba(0, 210, 255, 0.25)', fontWeight: 700 }}
+                          onClick={() => setSelectedFillToEdit(f)}
+                          title="Modifier la quantité ou le kilométrage"
+                        >
+                          ✏️ Modifier
+                        </button>
+                        <button 
+                          className="btn btn-primary"
+                          style={{ padding: '0.4rem 0.95rem', fontSize: '0.8rem', backgroundColor: 'var(--accent-green)', borderColor: 'var(--accent-green)', fontWeight: 700, boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+                          onClick={() => handleConfirmFill(f.id)}
+                          title="Valider et confirmer définitivement"
+                        >
+                          ✓ Confirmer
+                        </button>
+                        <button 
+                          className="btn btn-danger"
+                          style={{ padding: '0.4rem 0.65rem', fontSize: '0.8rem' }}
+                          onClick={() => handleDeleteFill(f.id)}
+                          title="Rejeter et restituer le carburant au stock citerne"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons Row */}
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <button 
@@ -162,87 +260,6 @@ export const AdminDashboard: React.FC = () => {
           </button>
         )}
       </div>
-
-      {/* Pending Validation Section for Admin */}
-      {user.role === 'admin' && pendingFuelFills.length > 0 && (
-        <div className="card" style={{ 
-          padding: '1.5rem', 
-          borderLeft: '5px solid var(--accent-orange)', 
-          backgroundColor: 'rgba(245, 158, 11, 0.04)',
-          borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(245, 158, 11, 0.12)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--accent-orange)', animation: 'pulse 1.5s infinite' }}></div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--accent-orange)' }}>
-                ⚡ Pleins de Carburant en Attente de Validation ({pendingFuelFills.length})
-              </h2>
-            </div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              Vérifiez les quantités et kilométrages saisis par les agents avant déduction du stock citerne.
-            </span>
-          </div>
-
-          <div className="table-responsive">
-            <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
-              <thead>
-                <tr style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
-                  <th>Date & Heure</th>
-                  <th>Véhicule / Engin</th>
-                  <th>Chauffeur</th>
-                  <th>Quantité Saisie</th>
-                  <th>Kilométrage</th>
-                  <th style={{ textAlign: 'right' }}>Actions Administrateur</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingFuelFills.map(f => (
-                  <tr key={f.id} style={{ backgroundColor: 'var(--bg-card)', borderRadius: '10px' }}>
-                    <td style={{ padding: '0.85rem', fontSize: '0.85rem' }}>{formatDate(f.createdAt)}</td>
-                    <td style={{ padding: '0.85rem', fontWeight: 600 }}>{getVehicleLabel(f.vehicleId)}</td>
-                    <td style={{ padding: '0.85rem' }}>{getDriverLabel(f.driverId)}</td>
-                    <td style={{ padding: '0.85rem' }}>
-                      <span style={{ fontWeight: 800, color: 'var(--accent-cyan)', fontSize: '1rem' }}>
-                        {f.quantity} L
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.85rem', fontWeight: 600 }}>{f.mileage.toLocaleString()} km</td>
-                    <td style={{ padding: '0.85rem', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
-                        <button 
-                          className="btn"
-                          style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', backgroundColor: 'rgba(0, 210, 255, 0.1)', color: 'var(--accent-cyan)', border: '1px solid rgba(0, 210, 255, 0.25)', fontWeight: 600 }}
-                          onClick={() => setSelectedFillToEdit(f)}
-                          title="Modifier les valeurs"
-                        >
-                          ✏️ Modifier
-                        </button>
-                        <button 
-                          className="btn btn-primary"
-                          style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', backgroundColor: 'var(--accent-green)', borderColor: 'var(--accent-green)', fontWeight: 700 }}
-                          onClick={() => handleConfirmFill(f.id)}
-                          title="Confirmer et déduire de la citerne"
-                        >
-                          ✓ Confirmer
-                        </button>
-                        <button 
-                          className="btn btn-danger"
-                          style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                          onClick={() => handleDeleteFill(f.id)}
-                          title="Rejeter ce plein"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Stats Cards Grid */}
       <div className="grid grid-3">
