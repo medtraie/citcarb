@@ -497,7 +497,7 @@ export const ReportsPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid var(--border-color)', paddingBottom: '1.5rem' }}>
           <div>
             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.3rem' }}>
-              FUELFLOW FLEET MANAGEMENT 2026 • RAPPORT OFFICIEL
+              SFTFUEL FLEET MANAGEMENT 2026 • RAPPORT OFFICIEL
             </div>
             <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
               {activeReportType === 'global' && 'Rapport Exécutif Global de la Flotte'}
@@ -513,7 +513,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>FuelFlow Systems</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>SFTFUEL Systems</div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Généré le: {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700, marginTop: '0.2rem' }}>Édition Certifiée</div>
           </div>
@@ -766,7 +766,7 @@ export const ReportsPage: React.FC = () => {
           }}
         >
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Direction de la Flotte FuelFlow</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>Direction de la Flotte SFTFUEL</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Document officiel d'audit interne</div>
           </div>
           <div 

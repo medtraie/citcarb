@@ -22,8 +22,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <img src={logoImg} alt="FuelFlow Logo" className="app-logo" />
-        <span className="sidebar-title">FuelFlow</span>
+        <img src={logoImg} alt="SFTFUEL Logo" className="app-logo" style={{ objectFit: 'contain' }} />
+        <span className="sidebar-title">SFTFUEL</span>
       </div>
 
       <nav className="sidebar-menu">

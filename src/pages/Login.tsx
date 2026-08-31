@@ -102,19 +102,19 @@ export const Login: React.FC = () => {
       }}>
         <img 
           src={logoImg} 
-          alt="FuelFlow Logo" 
+          alt="SFTFUEL Logo" 
           style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '16px',
-            objectFit: 'cover',
+            width: '85px',
+            height: '85px',
+            borderRadius: '20px',
+            objectFit: 'contain',
             marginBottom: '1rem',
-            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)'
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
           }}
         />
         
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem', color: '#fff' }}>
-          FuelFlow
+        <h2 style={{ fontSize: '1.85rem', fontWeight: 800, marginBottom: '0.25rem', color: '#fff', letterSpacing: '0.05em' }}>
+          SFTFUEL
         </h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
           Système de Gestion de Carburant & Fluides

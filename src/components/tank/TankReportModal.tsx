@@ -408,7 +408,7 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid var(--border-color)', paddingBottom: '1.25rem' }}>
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent-orange)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '0.35rem' }}>
-                  FUELFLOW FLEET SYSTEMS 2026 • RAPPORT D'AUDIT CITERNE & MOUVEMENTS
+                  SFTFUEL FLEET SYSTEMS 2026 • RAPPORT D'AUDIT CITERNE & MOUVEMENTS
                 </div>
                 <h1 style={{ fontSize: '1.85rem', fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
                   Bilan & Contrôle de la Citerne Principale
@@ -421,7 +421,7 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>FuelFlow Energy</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)' }}>SFTFUEL Energy</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                   Généré le: {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
@@ -737,7 +737,7 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
               }}
             >
               <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)' }}>Responsable Logistique & Direction FuelFlow</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)' }}>Responsable Logistique & Direction SFTFUEL</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Document officiel d'audit des hydrocarbures & contrôle de gestion</div>
               </div>
               <div 

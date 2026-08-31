@@ -18,7 +18,7 @@ export const AppLayout: React.FC = () => {
     if (path.startsWith('/admin')) return 'Tableau de bord Admin';
     if (path.startsWith('/manager')) return 'Tableau de bord Manager';
     if (path.startsWith('/agent')) return 'Saisie Rapide Agent';
-    return 'FuelFlow';
+    return 'SFTFUEL';
   };
 
   return (
