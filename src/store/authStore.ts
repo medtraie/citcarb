@@ -10,7 +10,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkSession: () => Promise<UserProfile | null>;
   setProfileCompleted: (fullName: string, role: UserRole) => Promise<void>;
-  addAgent: (email: string, password: string) => Promise<void>;
+  addAgent: (email: string, password: string, fullName?: string) => Promise<void>;
 }
 
 const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
@@ -363,12 +363,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: updatedUser });
   },
 
-  addAgent: async (email, password) => {
+  addAgent: async (email, password, fullName) => {
     const currentUser = get().user;
     if (!currentUser) throw new Error("Non connecté");
 
-    // En mode démo, on simule l'ajout (ne fait rien de réel)
-    if (currentUser.email.startsWith('demo_') || currentUser.email.includes('demo.com')) {
+    const agentName = fullName?.trim() || "Utilisateur / Agent";
+    const lowerEmail = email.trim().toLowerCase();
+
+    // En mode démo, on simule l'ajout dans localStorage
+    if (currentUser.ownerId === 'demo_admin_uid' || currentUser.email.startsWith('demo_') || currentUser.email.endsWith('@demo.com')) {
+      const existing = localStorage.getItem('fuel_flow_demo_agents');
+      const agents = existing ? JSON.parse(existing) : [];
+      agents.push({
+        id: `demo_agent_${Date.now()}`,
+        email: lowerEmail,
+        full_name: agentName,
+        role: 'agent',
+        owner_id: currentUser.ownerId,
+        permissions: {
+          can_refill: true,
+          can_add_vehicle: false,
+          can_add_driver: false,
+          can_view_reports: true,
+          can_manage_users: false,
+        },
+        is_completed: true,
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('fuel_flow_demo_agents', JSON.stringify(agents));
       return;
     }
 
@@ -382,18 +404,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
 
       const { data, error } = await secondarySupabase.auth.signUp({
-        email,
+        email: lowerEmail,
         password,
       });
 
       if (error) throw error;
       if (!data.user) throw new Error("Erreur lors de la création du compte agent.");
 
-      // Insert profile for the new agent, linking it to the current admin's ownerId
+      // Insert profile for the new agent, strictly linking it to the current admin's ownerId
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: data.user.id,
-        email: data.user.email,
-        full_name: "Agent de Carburant",
+        email: lowerEmail,
+        full_name: agentName,
         role: "agent",
         owner_id: currentUser.ownerId || currentUser.id,
         is_completed: true,
@@ -401,7 +423,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           can_refill: true,
           can_add_vehicle: false,
           can_add_driver: false,
-          can_view_reports: false,
+          can_view_reports: true,
           can_manage_users: false,
         }
       });

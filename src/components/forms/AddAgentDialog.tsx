@@ -8,6 +8,7 @@ interface AddAgentDialogProps {
 
 export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose }) => {
   const { addAgent } = useAuthStore();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
     setSuccess(false);
 
     if (!email || !password) {
-      setError('Veuillez remplir tous les champs.');
+      setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
@@ -33,12 +34,13 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
 
     setSubmitting(true);
     try {
-      await addAgent(email, password);
+      await addAgent(email, password, fullName);
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setEmail('');
         setPassword('');
+        setFullName('');
         onClose();
       }, 2000);
     } catch (err: any) {
@@ -50,10 +52,10 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: '400px' }}>
+      <div className="modal-content" style={{ maxWidth: '440px' }}>
         <button className="modal-close" onClick={onClose} disabled={submitting}>&times;</button>
         
-        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h2 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
           Créer un compte Agent
         </h2>
@@ -66,9 +68,9 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
             borderRadius: '8px',
             textAlign: 'center',
             marginBottom: '1rem',
-            fontWeight: 500
+            fontWeight: 600
           }}>
-            Compte agent créé avec succès !
+            ✓ Compte agent créé et synchronisé avec succès !
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -87,20 +89,32 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
             )}
 
             <div className="form-group">
-              <label className="form-label">Email de l'agent</label>
+              <label className="form-label">Nom complet de l'agent</label>
+              <input 
+                type="text" 
+                className="form-control"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ex: Utilisateur / Agent"
+                disabled={submitting}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email de l'agent *</label>
               <input 
                 type="email" 
                 className="form-control"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="agent@example.com"
+                placeholder="user@example.com"
                 required
                 disabled={submitting}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Mot de passe provisoire</label>
+              <label className="form-label">Mot de passe provisoire *</label>
               <input 
                 type="password" 
                 className="form-control"
@@ -112,10 +126,22 @@ export const AddAgentDialog: React.FC<AddAgentDialogProps> = ({ isOpen, onClose 
               />
             </div>
 
+            <div style={{
+              fontSize: '0.8rem',
+              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--bg-input)',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              border: '1px solid var(--border-color)',
+              lineHeight: 1.4
+            }}>
+              🔒 <strong>Règles de sécurité appliquées :</strong> L'agent aura accès aux données en temps réel de votre flotte (saisie et consultation), sans accès aux sections sensibles (Analytique, Véhicules, Chauffeurs) et sans droits de modification/suppression.
+            </div>
+
             <button 
               type="submit" 
               className="btn btn-primary" 
-              style={{ marginTop: '1rem', padding: '0.75rem', display: 'flex', justifyContent: 'center' }}
+              style={{ marginTop: '0.5rem', padding: '0.75rem', display: 'flex', justifyContent: 'center' }}
               disabled={submitting}
             >
               {submitting ? 'Création en cours...' : 'Créer l\'Agent'}
