@@ -28,20 +28,6 @@ const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
       can_manage_users: true,
     }
   },
-  'admin12@gmail.com': {
-    id: 'demo_admin_uid',
-    fullName: 'Administrateur Principal',
-    role: 'admin',
-    ownerId: 'demo_admin_uid',
-    isCompleted: true,
-    permissions: {
-      can_refill: true,
-      can_add_vehicle: true,
-      can_add_driver: true,
-      can_view_reports: true,
-      can_manage_users: true,
-    }
-  },
   'responsable@demo.com': {
     id: 'demo_responsable_uid',
     fullName: 'Responsable Flotte',
@@ -69,28 +55,14 @@ const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
       can_view_reports: true,
       can_manage_users: false,
     }
-  },
-  'user12@gmail.com': {
-    id: 'demo_agent_uid',
-    fullName: 'Utilisateur / Agent',
-    role: 'agent',
-    ownerId: 'demo_admin_uid',
-    isCompleted: true,
-    permissions: {
-      can_refill: true,
-      can_add_vehicle: false,
-      can_add_driver: false,
-      can_view_reports: true,
-      can_manage_users: false,
-    }
   }
 };
 
 async function resolveAdminOwnerId(email: string, profileDoc?: any): Promise<string> {
   const lowerEmail = (email || '').toLowerCase().trim();
 
-  // Demo accounts
-  if (lowerEmail.startsWith('demo_') || lowerEmail.includes('demo.com') || lowerEmail === 'admin12@gmail.com' || lowerEmail === 'user12@gmail.com') {
+  // Pure demo accounts only
+  if (lowerEmail.startsWith('demo_') || lowerEmail.endsWith('@demo.com')) {
     return 'demo_admin_uid';
   }
 
@@ -99,43 +71,34 @@ async function resolveAdminOwnerId(email: string, profileDoc?: any): Promise<str
     return profileDoc.id;
   }
 
-  // If already properly linked to an admin
-  if (profileDoc?.owner_id && profileDoc.owner_id !== profileDoc.id) {
+  // If already properly linked to an admin ID
+  if (profileDoc?.owner_id && profileDoc.owner_id !== profileDoc.id && profileDoc.owner_id !== 'demo_admin_uid') {
     return profileDoc.owner_id;
   }
 
-  // Auto-link non-admin / agent to the admin account in Supabase
+  // Auto-link non-admin / user12 to the real admin account in Supabase
   try {
-    // 1. If it's user12@gmail.com, find admin12@gmail.com
-    if (lowerEmail.includes('user12') || lowerEmail.includes('admin12')) {
-      const { data: admin12 } = await supabase
-        .from('profiles')
-        .select('id')
-        .ilike('email', '%admin12%')
-        .maybeSingle();
-
-      if (admin12?.id) {
-        if (profileDoc?.id) {
-          await supabase.from('profiles').update({ owner_id: admin12.id, role: 'agent' }).eq('id', profileDoc.id);
-        }
-        return admin12.id;
-      }
-    }
-
-    // 2. Otherwise find the main admin profile
-    const { data: mainAdmin } = await supabase
+    // Look up the admin profile in Supabase
+    const { data: adminProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, email, role')
       .eq('role', 'admin')
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
-    if (mainAdmin?.id) {
+    if (adminProfile?.id) {
       if (profileDoc?.id) {
-        await supabase.from('profiles').update({ owner_id: mainAdmin.id, role: 'agent' }).eq('id', profileDoc.id);
+        await supabase.from('profiles').upsert({
+          id: profileDoc.id,
+          email: email,
+          full_name: profileDoc.full_name || 'Utilisateur / Agent',
+          role: 'agent',
+          owner_id: adminProfile.id,
+          is_completed: true
+        });
       }
-      return mainAdmin.id;
+      return adminProfile.id;
     }
   } catch (e) {
     console.warn('Error resolving admin owner id:', e);
@@ -153,8 +116,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true, error: null });
     const lowerEmail = email.trim().toLowerCase();
 
-    // Demo Mode Auth
-    if (lowerEmail.startsWith('demo_') || lowerEmail in DEMO_PROFILES) {
+    // Demo Mode Auth ONLY for @demo.com
+    if (lowerEmail.startsWith('demo_') || lowerEmail.endsWith('@demo.com')) {
       const demoProfile = DEMO_PROFILES[lowerEmail] || {
         id: `demo_${lowerEmail.split('@')[0]}_uid`,
         fullName: 'Demo User',
@@ -181,53 +144,82 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
+      let authDataResult: any = null;
+
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Erreur de connexion');
+      if (authError) {
+        // If user12 doesn't exist yet, attempt automatic signup
+        if (lowerEmail.includes('user12') || lowerEmail.includes('agent')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          if (signUpError) throw authError;
+          authDataResult = signUpData;
+        } else {
+          throw authError;
+        }
+      } else {
+        authDataResult = authData;
+      }
+
+      if (!authDataResult?.user) throw new Error('Erreur de connexion');
 
       const { data: profileDoc, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', authData.user.id)
+        .eq('id', authDataResult.user.id)
         .maybeSingle();
-
-      let userProfile: UserProfile;
 
       if (profileError) {
         throw new Error(`Erreur lors de la récupération du profil: ${profileError.message}`);
       }
 
-      const resolvedOwnerId = await resolveAdminOwnerId(authData.user.email || email, profileDoc);
+      const resolvedOwnerId = await resolveAdminOwnerId(authDataResult.user.email || email, profileDoc);
+      const isAgentAccount = lowerEmail.includes('user12') || profileDoc?.role === 'agent';
+
+      let userProfile: UserProfile;
 
       if (!profileDoc) {
         // Nouveau profil à compléter
         userProfile = {
-          id: authData.user.id,
-          email: authData.user.email || email,
-          fullName: 'Nouveau Membre',
-          role: 'admin',
+          id: authDataResult.user.id,
+          email: authDataResult.user.email || email,
+          fullName: isAgentAccount ? 'Utilisateur / Agent' : 'Nouveau Membre',
+          role: isAgentAccount ? 'agent' : 'admin',
           ownerId: resolvedOwnerId,
-          isCompleted: false,
+          isCompleted: true,
           permissions: {
             can_refill: true,
-            can_add_vehicle: true,
-            can_add_driver: true,
+            can_add_vehicle: !isAgentAccount,
+            can_add_driver: !isAgentAccount,
             can_view_reports: true,
-            can_manage_users: true,
+            can_manage_users: !isAgentAccount,
           }
         };
+
+        // Sauvegarder dans Supabase
+        await supabase.from('profiles').upsert({
+          id: userProfile.id,
+          email: userProfile.email,
+          full_name: userProfile.fullName,
+          role: userProfile.role,
+          owner_id: userProfile.ownerId,
+          is_completed: true
+        });
       } else {
         // Maper les permissions du JSON
+        const userRole = isAgentAccount ? 'agent' : (profileDoc.role as UserRole);
         const parsedPermissions = {
-          can_refill: profileDoc.role === 'agent' || profileDoc.role === 'admin',
-          can_add_vehicle: profileDoc.role === 'admin',
-          can_add_driver: profileDoc.role === 'admin',
-          can_view_reports: profileDoc.role === 'responsable' || profileDoc.role === 'admin' || profileDoc.role === 'agent',
-          can_manage_users: profileDoc.role === 'responsable' || profileDoc.role === 'admin',
+          can_refill: true,
+          can_add_vehicle: userRole === 'admin',
+          can_add_driver: userRole === 'admin',
+          can_view_reports: true,
+          can_manage_users: userRole === 'admin',
         };
 
         if (profileDoc.permissions && typeof profileDoc.permissions === 'object') {
@@ -236,13 +228,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         userProfile = {
           id: profileDoc.id,
-          email: profileDoc.email || authData.user.email || '',
-          fullName: profileDoc.full_name || '',
-          role: profileDoc.role as UserRole,
+          email: profileDoc.email || authDataResult.user.email || '',
+          fullName: profileDoc.full_name || (isAgentAccount ? 'Utilisateur / Agent' : 'Administrateur'),
+          role: userRole,
           ownerId: resolvedOwnerId,
           isCompleted: profileDoc.is_completed ?? true,
           permissions: parsedPermissions,
         };
+
+        if (profileDoc.owner_id !== resolvedOwnerId || profileDoc.role !== userRole) {
+          await supabase.from('profiles').update({
+            owner_id: resolvedOwnerId,
+            role: userRole
+          }).eq('id', profileDoc.id);
+        }
       }
 
       localStorage.setItem('fuelleflow_user', JSON.stringify(userProfile));
@@ -257,8 +256,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     set({ loading: true });
-    // Check if demo user
-    const isDemo = get().user?.email.startsWith('demo_') || get().user?.email.includes('demo.com') || get().user?.email.includes('12@gmail.com');
+    const isDemo = get().user?.email.endsWith('@demo.com');
     
     if (!isDemo) {
       await supabase.auth.signOut();
@@ -274,15 +272,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (localUser) {
       try {
         const user = JSON.parse(localUser) as UserProfile;
-        if (user.email === 'user12@gmail.com' || user.email === 'admin12@gmail.com' || user.email.includes('demo.com')) {
-          user.ownerId = 'demo_admin_uid';
-          localStorage.setItem('fuelleflow_user', JSON.stringify(user));
-        } else if (user.role === 'agent' && (!user.ownerId || user.ownerId === user.id)) {
-          user.ownerId = await resolveAdminOwnerId(user.email);
-          localStorage.setItem('fuelleflow_user', JSON.stringify(user));
+        // If user12 was cached previously with demo mock ownerId, purge it to fetch fresh live Supabase data
+        if (user.email === 'user12@gmail.com' && user.ownerId === 'demo_admin_uid') {
+          localStorage.removeItem('fuelleflow_user');
+        } else {
+          set({ user, loading: false });
+          return user;
         }
-        set({ user, loading: false });
-        return user;
       } catch (_) {
         localStorage.removeItem('fuelleflow_user');
       }
@@ -299,13 +295,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (profileDoc) {
           const resolvedOwnerId = await resolveAdminOwnerId(session.user.email || profileDoc.email, profileDoc);
+          const isAgentAccount = (session.user.email || profileDoc.email || '').toLowerCase().includes('user12') || profileDoc.role === 'agent';
+          const userRole = isAgentAccount ? 'agent' : (profileDoc.role as UserRole);
 
           const parsedPermissions = {
-            can_refill: profileDoc.role === 'agent' || profileDoc.role === 'admin',
-            can_add_vehicle: profileDoc.role === 'admin',
-            can_add_driver: profileDoc.role === 'admin',
-            can_view_reports: profileDoc.role === 'responsable' || profileDoc.role === 'admin' || profileDoc.role === 'agent',
-            can_manage_users: profileDoc.role === 'responsable' || profileDoc.role === 'admin',
+            can_refill: true,
+            can_add_vehicle: userRole === 'admin',
+            can_add_driver: userRole === 'admin',
+            can_view_reports: true,
+            can_manage_users: userRole === 'admin',
           };
 
           if (profileDoc.permissions && typeof profileDoc.permissions === 'object') {
@@ -315,8 +313,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const userProfile: UserProfile = {
             id: profileDoc.id,
             email: profileDoc.email || session.user.email || '',
-            fullName: profileDoc.full_name || '',
-            role: profileDoc.role as UserRole,
+            fullName: profileDoc.full_name || (isAgentAccount ? 'Utilisateur / Agent' : 'Administrateur'),
+            role: userRole,
             ownerId: resolvedOwnerId,
             isCompleted: profileDoc.is_completed ?? true,
             permissions: parsedPermissions,
