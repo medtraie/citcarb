@@ -169,6 +169,8 @@ export const VehiclesPage: React.FC = () => {
   const transportVehicles = vehicles.filter(v => !v.type?.toLowerCase().includes('engin'));
   const enginVehicles = vehicles.filter(v => v.type?.toLowerCase().includes('engin'));
 
+  if (!user) return null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       

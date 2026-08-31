@@ -101,6 +101,8 @@ export const DriversPage: React.FC = () => {
     return 'Inactif';
   };
 
+  if (!user) return null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
