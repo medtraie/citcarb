@@ -77,11 +77,10 @@ export const Interactive3DLogo: React.FC<Interactive3DLogoProps> = ({
             ? `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.08, 1.08, 1.08)`
             : 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
           transition: isHovered ? 'transform 0.08s ease-out' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-          borderRadius: '22%',
           filter: showGlow
             ? isHovered
-              ? 'drop-shadow(0 10px 20px rgba(16, 185, 129, 0.45)) drop-shadow(0 0 12px rgba(0, 210, 255, 0.35))'
-              : 'drop-shadow(0 4px 10px rgba(16, 185, 129, 0.25))'
+              ? 'drop-shadow(0 14px 22px rgba(16, 185, 129, 0.55)) drop-shadow(0 0 16px rgba(0, 210, 255, 0.4))'
+              : 'drop-shadow(0 6px 12px rgba(16, 185, 129, 0.35))'
             : undefined,
         }}
       >
@@ -92,14 +91,9 @@ export const Interactive3DLogo: React.FC<Interactive3DLogoProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            borderRadius: '22%',
+            objectFit: 'contain',
             display: 'block',
-            transform: 'translateZ(10px)',
-            boxShadow: isHovered
-              ? '0 12px 24px -6px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(52, 211, 153, 0.6)'
-              : '0 6px 14px -4px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.15)',
-            transition: 'box-shadow 0.3s ease',
+            transform: 'translateZ(12px)',
           }}
         />
 
@@ -112,10 +106,10 @@ export const Interactive3DLogo: React.FC<Interactive3DLogoProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              borderRadius: '22%',
+              borderRadius: '50%',
               pointerEvents: 'none',
-              background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, 0.38) 0%, rgba(52, 211, 153, 0.15) 35%, transparent 70%)`,
-              transform: 'translateZ(18px)',
+              background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, 0.45) 0%, rgba(52, 211, 153, 0.2) 30%, transparent 65%)`,
+              transform: 'translateZ(20px)',
               mixBlendMode: 'overlay',
             }}
           />
