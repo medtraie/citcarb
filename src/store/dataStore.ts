@@ -98,6 +98,9 @@ interface DataState {
     ownerId: string;
     createdAt?: string;
   }) => Promise<void>;
+  confirmFuelFill: (fillId: string, ownerId: string) => Promise<void>;
+  updateFuelFill: (fill: FuelFill) => Promise<void>;
+  deleteFuelFill: (fillId: string, ownerId: string) => Promise<void>;
 
   // Notifications
   fetchNotifications: (ownerId: string) => Promise<void>;
@@ -1349,7 +1352,10 @@ export const useDataStore = create<DataState>((set, get) => ({
         photoUrl: f.photo_url,
         performedBy: f.performed_by,
         ownerId: f.owner_id,
-        createdAt: f.created_at
+        createdAt: f.created_at,
+        status: (f.status as any) || 'confirmed',
+        validatedAt: f.validated_at,
+        validatedBy: f.validated_by,
       }));
 
       set({ fuelFills: mapped });
@@ -1361,23 +1367,24 @@ export const useDataStore = create<DataState>((set, get) => ({
   addFuelFill: async ({ vehicleId, driverId, quantity, mileage, notes, photoUrl, performedBy, ownerId, createdAt }) => {
     const nowStr = createdAt || new Date().toISOString();
     const fillId = generateUUID();
+    const isAgent = performedBy !== ownerId;
+    const initialStatus: 'pending' | 'confirmed' = isAgent ? 'pending' : 'confirmed';
 
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
       
-      // Update vehicle mileage
-      demo.vehicles = demo.vehicles.map((v: any) => {
-        if (v.id === vehicleId) {
-          const oldMileage = v.currentMileage;
-          const dist = mileage - oldMileage;
-          const calculatedCons = dist > 0 ? (quantity / dist) * 100 : 0;
-          return { ...v, currentMileage: mileage };
-        }
-        return v;
-      });
+      if (initialStatus === 'confirmed') {
+        // Update vehicle mileage
+        demo.vehicles = demo.vehicles.map((v: any) => {
+          if (v.id === vehicleId) {
+            return { ...v, currentMileage: mileage };
+          }
+          return v;
+        });
 
-      // Update tank volume
-      demo.tank.currentVolume = Math.max(0, demo.tank.currentVolume - quantity);
+        // Update tank volume
+        demo.tank.currentVolume = Math.max(0, demo.tank.currentVolume - quantity);
+      }
 
       const newFill: FuelFill = {
         id: fillId,
@@ -1385,14 +1392,15 @@ export const useDataStore = create<DataState>((set, get) => ({
         driverId,
         quantity,
         mileage,
-        distanceTraveled: 350, // mock values
+        distanceTraveled: 350,
         calculatedConsumption: 7.2,
         anomalyDetected: false,
         notes,
         photoUrl,
         performedBy,
         ownerId,
-        createdAt: nowStr
+        createdAt: nowStr,
+        status: initialStatus,
       };
 
       demo.fuelFills.unshift(newFill);
@@ -1425,7 +1433,6 @@ export const useDataStore = create<DataState>((set, get) => ({
           distanceTraveled = mileage - prevMileage;
           calculatedConsumption = (quantity / distanceTraveled) * 100;
 
-          // Check for anomaly (consumption > 150% of average)
           const { data: vehDoc } = await supabase.from('vehicles').select('avg_consumption').eq('id', vehicleId).single();
           if (vehDoc && vehDoc.avg_consumption) {
             const avg = Number(vehDoc.avg_consumption);
@@ -1435,13 +1442,11 @@ export const useDataStore = create<DataState>((set, get) => ({
             }
           }
         } else if (mileage < prevMileage) {
-          // Mileage discrepancy anomaly
           anomalyDetected = true;
           anomalyType = 'Kilométrage invalide';
         }
       }
 
-      // Ensure performed_by won't trigger FK violation in fuel_fills or database triggers
       let safePerformedBy: string | null = performedBy;
       if (safePerformedBy) {
         try {
@@ -1470,9 +1475,17 @@ export const useDataStore = create<DataState>((set, get) => ({
         performed_by: safePerformedBy,
         owner_id: ownerId,
         created_at: nowStr,
+        status: initialStatus,
       };
 
       let { error } = await supabase.from('fuel_fills').insert(payload);
+      if (error && (error.message?.includes('status') || error.code === '42703')) {
+        // If status column doesn't exist yet in SQL, insert without status
+        delete payload.status;
+        const retry = await supabase.from('fuel_fills').insert(payload);
+        error = retry.error;
+      }
+
       if (error && (error.message?.includes('performed_by_fkey') || error.code === '23503' || error.message?.includes('foreign key constraint'))) {
         payload.performed_by = ownerId;
         const retry1 = await supabase.from('fuel_fills').insert(payload);
@@ -1486,46 +1499,225 @@ export const useDataStore = create<DataState>((set, get) => ({
       }
       if (error) throw error;
 
-      // Update vehicle mileage
-      await supabase.from('vehicles').update({ current_mileage: mileage }).eq('id', vehicleId);
+      // If recorded by Admin (or confirmed), immediately update vehicle mileage and tank volume
+      if (initialStatus === 'confirmed') {
+        await supabase.from('vehicles').update({ current_mileage: mileage }).eq('id', vehicleId);
 
-      // Decrement tank volume
-      const currentTank = get().tank;
-      if (currentTank) {
-        const newVolume = Math.max(0, currentTank.currentVolume - quantity);
-        await supabase.from('tanks').update({ current_volume: newVolume }).eq('id', currentTank.id);
-        
-        // Low Stock tank alert
-        if (newVolume <= currentTank.alertThreshold && currentTank.currentVolume > currentTank.alertThreshold) {
-          await get().sendNotification({
-            ownerId,
-            type: 'low_stock',
-            title: 'Stock Citerne Critique',
-            message: `Le niveau de la citerne de gasoil est bas (${newVolume}L restant).`,
-          });
+        const currentTank = get().tank;
+        if (currentTank) {
+          const newVolume = Math.max(0, currentTank.currentVolume - quantity);
+          await supabase.from('tanks').update({ current_volume: newVolume }).eq('id', currentTank.id);
+          
+          if (newVolume <= currentTank.alertThreshold && currentTank.currentVolume > currentTank.alertThreshold) {
+            await get().sendNotification({
+              ownerId,
+              type: 'low_stock',
+              title: 'Stock Citerne Critique',
+              message: `Le niveau de la citerne de gasoil est bas (${newVolume}L restant).`,
+            });
+          }
         }
-      }
-
-      if (anomalyDetected) {
+      } else {
+        // Send notification to Admin that an Agent submitted a fuel fill awaiting confirmation
         await get().sendNotification({
           ownerId,
-          type: 'consumption_anomaly',
-          title: 'Anomalie de Consommation',
-          message: `Anomalie détectée sur le véhicule: ${anomalyType}. Consommation calculée: ${calculatedConsumption?.toFixed(2)} L/100km.`,
+          type: 'fuel_fill_pending',
+          title: '⚡ Plein en attente de validation',
+          message: `L'agent a saisi un plein de ${quantity}L (${mileage} km). Veuillez vérifier et confirmer.`,
         });
       }
-
-      // Promptly send notification to manager about fuel fill
-      await get().sendNotification({
-        ownerId,
-        type: 'fuel_fill',
-        title: 'Nouveau plein enregistré',
-        message: `Plein de ${quantity}L enregistré pour le véhicule par l'agent.`,
-      });
 
       await get().fetchFuelFills(ownerId);
       await get().fetchTank(ownerId);
       await get().fetchVehicles(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  confirmFuelFill: async (fillId, ownerId) => {
+    const fills = get().fuelFills;
+    const target = fills.find(f => f.id === fillId);
+    if (!target) return;
+
+    const nowStr = new Date().toISOString();
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.fuelFills = (demo.fuelFills || []).map((f: any) => {
+        if (f.id === fillId) {
+          return { ...f, status: 'confirmed', validatedAt: nowStr, validatedBy: ownerId };
+        }
+        return f;
+      });
+
+      // Update vehicle mileage
+      demo.vehicles = (demo.vehicles || []).map((v: any) => {
+        if (v.id === target.vehicleId) {
+          return { ...v, currentMileage: target.mileage };
+        }
+        return v;
+      });
+
+      // Deduct from tank
+      if (demo.tank) {
+        demo.tank.currentVolume = Math.max(0, demo.tank.currentVolume - target.quantity);
+      }
+
+      saveDemoData(demo);
+      set({ fuelFills: demo.fuelFills, vehicles: demo.vehicles, tank: demo.tank });
+      return;
+    }
+
+    try {
+      // 1. Update fuel_fill status
+      const { error: fillErr } = await supabase
+        .from('fuel_fills')
+        .update({
+          status: 'confirmed',
+          validated_at: nowStr,
+          validated_by: ownerId
+        })
+        .eq('id', fillId);
+
+      if (fillErr && !fillErr.message.includes('status')) throw fillErr;
+
+      // 2. Update vehicle mileage
+      await supabase.from('vehicles').update({ current_mileage: target.mileage }).eq('id', target.vehicleId);
+
+      // 3. Deduct from tank
+      const currentTank = get().tank;
+      if (currentTank) {
+        const newVolume = Math.max(0, currentTank.currentVolume - target.quantity);
+        await supabase.from('tanks').update({ current_volume: newVolume }).eq('id', currentTank.id);
+        set({ tank: { ...currentTank, currentVolume: newVolume } });
+      }
+
+      await get().fetchFuelFills(ownerId);
+      await get().fetchTank(ownerId);
+      await get().fetchVehicles(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  updateFuelFill: async (updatedFill) => {
+    const ownerId = updatedFill.ownerId;
+    const oldFill = get().fuelFills.find(f => f.id === updatedFill.id);
+    const oldQuantity = oldFill ? oldFill.quantity : 0;
+    const wasPending = oldFill?.status === 'pending';
+    const nowStr = new Date().toISOString();
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.fuelFills = (demo.fuelFills || []).map((f: any) => {
+        if (f.id === updatedFill.id) {
+          return { ...f, ...updatedFill, status: 'confirmed', validatedAt: nowStr, validatedBy: ownerId };
+        }
+        return f;
+      });
+
+      // Update vehicle mileage
+      demo.vehicles = (demo.vehicles || []).map((v: any) => {
+        if (v.id === updatedFill.vehicleId) {
+          return { ...v, currentMileage: updatedFill.mileage };
+        }
+        return v;
+      });
+
+      // Adjust tank volume
+      if (demo.tank) {
+        if (wasPending) {
+          demo.tank.currentVolume = Math.max(0, demo.tank.currentVolume - updatedFill.quantity);
+        } else {
+          const diff = updatedFill.quantity - oldQuantity;
+          demo.tank.currentVolume = Math.max(0, demo.tank.currentVolume - diff);
+        }
+      }
+
+      saveDemoData(demo);
+      set({ fuelFills: demo.fuelFills, vehicles: demo.vehicles, tank: demo.tank });
+      return;
+    }
+
+    try {
+      const payload: any = {
+        vehicle_id: updatedFill.vehicleId,
+        driver_id: updatedFill.driverId,
+        quantity: updatedFill.quantity,
+        mileage: updatedFill.mileage,
+        notes: updatedFill.notes || null,
+        status: 'confirmed',
+        validated_at: nowStr,
+        validated_by: ownerId,
+      };
+
+      const { error } = await supabase.from('fuel_fills').update(payload).eq('id', updatedFill.id);
+      if (error && !error.message.includes('status')) throw error;
+
+      // Update vehicle mileage
+      await supabase.from('vehicles').update({ current_mileage: updatedFill.mileage }).eq('id', updatedFill.vehicleId);
+
+      // Adjust tank volume
+      const currentTank = get().tank;
+      if (currentTank) {
+        let newVolume: number;
+        if (wasPending) {
+          newVolume = Math.max(0, currentTank.currentVolume - updatedFill.quantity);
+        } else {
+          const diff = updatedFill.quantity - oldQuantity;
+          newVolume = Math.max(0, currentTank.currentVolume - diff);
+        }
+
+        await supabase.from('tanks').update({ current_volume: newVolume }).eq('id', currentTank.id);
+        set({ tank: { ...currentTank, currentVolume: newVolume } });
+      }
+
+      await get().fetchFuelFills(ownerId);
+      await get().fetchTank(ownerId);
+      await get().fetchVehicles(ownerId);
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
+  deleteFuelFill: async (fillId, ownerId) => {
+    const target = get().fuelFills.find(f => f.id === fillId);
+    if (!target) return;
+
+    if (ownerId === 'demo_admin_uid') {
+      const demo = getDemoData();
+      demo.fuelFills = (demo.fuelFills || []).filter((f: any) => f.id !== fillId);
+      
+      // If confirmed, restore quantity to tank
+      if (target.status !== 'pending' && demo.tank) {
+        demo.tank.currentVolume = Math.min(demo.tank.capacity, demo.tank.currentVolume + target.quantity);
+      }
+
+      saveDemoData(demo);
+      set({ fuelFills: demo.fuelFills, tank: demo.tank });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('fuel_fills').delete().eq('id', fillId);
+      if (error) throw error;
+
+      // If confirmed, restore quantity to tank
+      if (target.status !== 'pending') {
+        const currentTank = get().tank;
+        if (currentTank) {
+          const newVolume = Math.min(currentTank.capacity, currentTank.currentVolume + target.quantity);
+          await supabase.from('tanks').update({ current_volume: newVolume }).eq('id', currentTank.id);
+          set({ tank: { ...currentTank, currentVolume: newVolume } });
+        }
+      }
+
+      await get().fetchFuelFills(ownerId);
+      await get().fetchTank(ownerId);
     } catch (err: any) {
       set({ error: err.message });
       throw err;

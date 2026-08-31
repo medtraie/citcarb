@@ -76,6 +76,8 @@ export interface BarrelMovement {
   createdAt: string;
 }
 
+export type FuelFillStatus = 'pending' | 'confirmed' | 'rejected';
+
 export interface FuelFill {
   id: string;
   vehicleId: string;
@@ -91,6 +93,9 @@ export interface FuelFill {
   performedBy?: string;
   ownerId: string;
   createdAt: string;
+  status?: FuelFillStatus;
+  validatedAt?: string;
+  validatedBy?: string;
 }
 
 export interface Tank {
