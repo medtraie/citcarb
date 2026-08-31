@@ -86,8 +86,19 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
     }
   };
 
+  const handleVehicleChange = (newVehicleId: string) => {
+    setVehicleId(newVehicleId);
+    const targetVeh = vehicles.find(v => v.id === newVehicleId);
+    if (targetVeh) {
+      if (targetVeh.driverId) {
+        setDriverId(targetVeh.driverId);
+      }
+    }
+  };
+
   const activeVehicles = vehicles.filter(v => v.status === 'active');
   const activeDrivers = drivers.filter(d => d.status === 'active');
+  const assignedDriver = selectedVehicle?.driverId ? drivers.find(d => d.id === selectedVehicle.driverId) : null;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -116,20 +127,27 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
         <select 
           className="form-control"
           value={vehicleId}
-          onChange={(e) => setVehicleId(e.target.value)}
+          onChange={(e) => handleVehicleChange(e.target.value)}
           required
         >
           <option value="">-- Sélectionner le véhicule ou engin --</option>
           {activeVehicles.map(v => (
             <option key={v.id} value={v.id}>
-              {v.brand} {v.model} ({v.plateNumber}) - {v.type}
+              {v.brand} {v.model} ({v.plateNumber}) - {v.type} {v.driverId ? '👤' : ''}
             </option>
           ))}
         </select>
       </div>
 
       <div className="form-group">
-        <label className="form-label">Chauffeur / Opérateur</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+          <label className="form-label" style={{ margin: 0 }}>Chauffeur / Opérateur</label>
+          {assignedDriver && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent-green)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
+              ✓ Chauffeur attribué : {assignedDriver.fullName}
+            </span>
+          )}
+        </div>
         <select 
           className="form-control"
           value={driverId}
@@ -139,7 +157,7 @@ export const FuelFillForm: React.FC<FuelFillFormProps> = ({
           <option value="">-- Sélectionner le chauffeur / conducteur --</option>
           {activeDrivers.map(d => (
             <option key={d.id} value={d.id}>
-              {d.fullName} (CIN: {d.cin})
+              {d.fullName} (CIN: {d.cin}){selectedVehicle?.driverId === d.id ? ' ⭐ (Assigné au véhicule)' : ''}
             </option>
           ))}
         </select>
