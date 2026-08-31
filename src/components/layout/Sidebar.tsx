@@ -27,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </div>
 
       <nav className="sidebar-menu">
-        {user.role === 'admin' && (
+        {user.role === 'admin' ? (
           <>
             <NavLink 
               to="/admin" 
@@ -102,12 +102,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <span>Rapports</span>
             </NavLink>
           </>
-        )}
-
-        {user.role === 'responsable' && (
+        ) : (
           <>
             <NavLink 
-              to="/manager" 
+              to="/admin" 
               end 
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
               onClick={onClose}
@@ -117,21 +115,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </NavLink>
 
             <NavLink 
-              to="/admin/analytics" 
+              to="/admin/barrels" 
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
               onClick={onClose}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-              <span>Analytique Active</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
+              <span>Barils d'Huile</span>
             </NavLink>
 
             <NavLink 
-              to="/manager/accounts" 
+              to="/admin/revisions" 
               className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
               onClick={onClose}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></svg>
-              <span>Gérer les Agents</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              <span>Révisions</span>
+            </NavLink>
+
+            <NavLink 
+              to="/admin/repairs" 
+              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+              <span>Réparations</span>
             </NavLink>
 
             <NavLink 
@@ -142,11 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               <span>Rapports</span>
             </NavLink>
-          </>
-        )}
 
-        {user.role === 'agent' && (
-          <>
             <NavLink 
               to="/agent" 
               end 

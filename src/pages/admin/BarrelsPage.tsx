@@ -71,14 +71,16 @@ export const BarrelsPage: React.FC = () => {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-secondary)', margin: 0 }}>
             Statut des Barils d'Huile
           </h2>
-          <button 
-            className="btn btn-primary"
-            onClick={() => setIsAddDialogOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Ajouter un baril
-          </button>
+          {user.role === 'admin' && (
+            <button 
+              className="btn btn-primary"
+              onClick={() => setIsAddDialogOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Ajouter un baril
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
           {barrels.map(b => (
@@ -87,12 +89,12 @@ export const BarrelsPage: React.FC = () => {
                 barrel={b} 
                 onConsume={() => setSelectedConsumeBarrel(b)}
                 onRefill={() => setSelectedRefillBarrel(b)}
-                onEdit={() => setSelectedEditBarrel(b)}
-                onDelete={() => {
+                onEdit={user.role === 'admin' ? () => setSelectedEditBarrel(b) : undefined}
+                onDelete={user.role === 'admin' ? () => {
                   if (window.confirm(`Êtes-vous sûr de vouloir supprimer le baril "${b.name}" ?`)) {
                     deleteBarrel(b.id, user.ownerId);
                   }
-                }}
+                } : undefined}
               />
             </div>
           ))}

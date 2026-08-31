@@ -108,9 +108,11 @@ export const DriversPage: React.FC = () => {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
           Liste des chauffeurs ({drivers.length} conducteurs)
         </h2>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          + Ajouter un Chauffeur
-        </button>
+        {user.role === 'admin' && (
+          <button className="btn btn-primary" onClick={openAddModal}>
+            + Ajouter un Chauffeur
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -145,25 +147,29 @@ export const DriversPage: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
-                      onClick={() => openEditModal(d)}
-                    >
-                      Modifier
-                    </button>
-                    <button 
-                      className="btn btn-danger" 
-                      style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      title="Supprimer ce chauffeur"
-                      onClick={() => {
-                        if (window.confirm(`Êtes-vous sûr de vouloir supprimer le chauffeur ${d.fullName} ?`)) {
-                          deleteDriver(d.id, user!.ownerId);
-                        }
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
+                    {user.role === 'admin' && (
+                      <>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
+                          onClick={() => openEditModal(d)}
+                        >
+                          Modifier
+                        </button>
+                        <button 
+                          className="btn btn-danger" 
+                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          title="Supprimer ce chauffeur"
+                          onClick={() => {
+                            if (window.confirm(`Êtes-vous sûr de vouloir supprimer le chauffeur ${d.fullName} ?`)) {
+                              deleteDriver(d.id, user!.ownerId);
+                            }
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

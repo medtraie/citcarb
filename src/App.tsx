@@ -21,9 +21,7 @@ export const App: React.FC = () => {
 
   const getRedirectPath = () => {
     if (!user) return '/login';
-    if (user.role === 'admin') return '/admin';
-    if (user.role === 'responsable') return '/manager';
-    return '/agent';
+    return '/admin';
   };
 
   return (
@@ -34,19 +32,21 @@ export const App: React.FC = () => {
         {/* Protected Routes Layout */}
         <Route element={<AppLayout />}>
           
-          {/* Admin Routes */}
+          {/* Main Dashboard (Admin & Agent/User) */}
           <Route 
             path="/admin" 
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <AdminDashboard />
               </ProtectedRoute>
             } 
           />
+
+          {/* Admin-Only Sections (Hidden and Protected from User/Agent) */}
           <Route 
             path="/admin/analytics" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'responsable']}>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <ActiveAnalyticsPage />
               </ProtectedRoute>
             } 
@@ -67,10 +67,12 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             } 
           />
+
+          {/* Shared Operations (Admin & Agent/User) */}
           <Route 
             path="/admin/barrels" 
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <BarrelsPage />
               </ProtectedRoute>
             } 
@@ -78,7 +80,7 @@ export const App: React.FC = () => {
           <Route 
             path="/admin/revisions" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'responsable']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <RevisionsPage />
               </ProtectedRoute>
             } 
@@ -86,45 +88,25 @@ export const App: React.FC = () => {
           <Route 
             path="/admin/repairs" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'responsable']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <RepairsPage />
               </ProtectedRoute>
             } 
           />
-
-          {/* Shared Reports (Admin & Manager) */}
           <Route 
             path="/admin/reports" 
             element={
-              <ProtectedRoute allowedRoles={['admin', 'responsable']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <ReportsPage />
               </ProtectedRoute>
             } 
           />
 
-          {/* Manager Routes */}
-          <Route 
-            path="/manager" 
-            element={
-              <ProtectedRoute allowedRoles={['responsable']}>
-                <ManagerDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/manager/accounts" 
-            element={
-              <ProtectedRoute allowedRoles={['responsable']}>
-                <AccountsPage />
-              </ProtectedRoute>
-            } 
-          />
-
-          {/* Agent Routes */}
+          {/* Agent Quick Entry */}
           <Route 
             path="/agent" 
             element={
-              <ProtectedRoute allowedRoles={['agent']}>
+              <ProtectedRoute allowedRoles={['agent', 'admin', 'responsable']}>
                 <AgentDashboard />
               </ProtectedRoute>
             } 

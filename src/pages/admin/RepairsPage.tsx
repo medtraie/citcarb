@@ -227,20 +227,21 @@ export const RepairsPage: React.FC = () => {
             >
               📥 En attente: {pendingCount}
             </button>
+            {user.role === 'admin' && (
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setRepairToEdit(null);
+                  setIsAddModalOpen(true);
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-orange)', color: '#fff' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                + Nouvelle Réparation
+              </button>
+            )}
           </div>
         </div>
-
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            setRepairToEdit(null);
-            setIsAddModalOpen(true);
-          }}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-orange)', color: '#fff' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Nouvelle Réparation
-        </button>
       </div>
 
       {/* Tabs */}
@@ -460,28 +461,32 @@ export const RepairsPage: React.FC = () => {
                             </button>
                           )}
 
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
-                            onClick={() => {
-                              setRepairToEdit(rep);
-                              setIsAddModalOpen(true);
-                            }}
-                          >
-                            Modifier
-                          </button>
+                          {user.role === 'admin' && (
+                            <>
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                                onClick={() => {
+                                  setRepairToEdit(rep);
+                                  setIsAddModalOpen(true);
+                                }}
+                              >
+                                Modifier
+                              </button>
 
-                          <button 
-                            className="btn btn-danger" 
-                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)' }}
-                            onClick={() => {
-                              if (window.confirm('Êtes-vous sûr de vouloir supprimer cette réparation ?')) {
-                                deleteRepair(rep.id, user.ownerId);
-                              }
-                            }}
-                          >
-                            ✕
-                          </button>
+                              <button 
+                                className="btn btn-danger" 
+                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)' }}
+                                onClick={() => {
+                                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette réparation ?')) {
+                                    deleteRepair(rep.id, user.ownerId);
+                                  }
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     );

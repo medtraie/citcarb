@@ -216,17 +216,19 @@ export const RevisionsPage: React.FC = () => {
           </div>
         </div>
 
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            setRevisionToEdit(null);
-            setIsAddModalOpen(true);
-          }}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)', color: '#fff' }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Nouvelle révision
-        </button>
+        {user.role === 'admin' && (
+          <button 
+            className="btn btn-primary"
+            onClick={() => {
+              setRevisionToEdit(null);
+              setIsAddModalOpen(true);
+            }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--accent-cyan)', color: '#fff' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nouvelle révision
+          </button>
+        )}
       </div>
 
       {/* Navigation Tabs */}
@@ -438,28 +440,32 @@ export const RevisionsPage: React.FC = () => {
                             ✓ Valider
                           </button>
 
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
-                            onClick={() => {
-                              setRevisionToEdit(r);
-                              setIsAddModalOpen(true);
-                            }}
-                          >
-                            Modifier
-                          </button>
+                          {user.role === 'admin' && (
+                            <>
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                                onClick={() => {
+                                  setRevisionToEdit(r);
+                                  setIsAddModalOpen(true);
+                                }}
+                              >
+                                Modifier
+                              </button>
 
-                          <button 
-                            className="btn btn-danger" 
-                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)' }}
-                            onClick={() => {
-                              if (window.confirm('Êtes-vous sûr de vouloir supprimer cette révision ?')) {
-                                deleteRevision(r.id, user.ownerId);
-                              }
-                            }}
-                          >
-                            ✕
-                          </button>
+                              <button 
+                                className="btn btn-danger" 
+                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)' }}
+                                onClick={() => {
+                                  if (window.confirm('Êtes-vous sûr de vouloir supprimer cette révision ?')) {
+                                    deleteRevision(r.id, user.ownerId);
+                                  }
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     );

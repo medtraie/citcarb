@@ -28,6 +28,20 @@ const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
       can_manage_users: true,
     }
   },
+  'admin12@gmail.com': {
+    id: 'demo_admin_uid',
+    fullName: 'Administrateur Principal',
+    role: 'admin',
+    ownerId: 'demo_admin_uid',
+    isCompleted: true,
+    permissions: {
+      can_refill: true,
+      can_add_vehicle: true,
+      can_add_driver: true,
+      can_view_reports: true,
+      can_manage_users: true,
+    }
+  },
   'responsable@demo.com': {
     id: 'demo_responsable_uid',
     fullName: 'Responsable Flotte',
@@ -52,7 +66,21 @@ const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
       can_refill: true,
       can_add_vehicle: false,
       can_add_driver: false,
-      can_view_reports: false,
+      can_view_reports: true,
+      can_manage_users: false,
+    }
+  },
+  'user12@gmail.com': {
+    id: 'demo_agent_uid',
+    fullName: 'Utilisateur / Agent',
+    role: 'agent',
+    ownerId: 'demo_admin_uid',
+    isCompleted: true,
+    permissions: {
+      can_refill: true,
+      can_add_vehicle: false,
+      can_add_driver: false,
+      can_view_reports: true,
       can_manage_users: false,
     }
   }

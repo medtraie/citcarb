@@ -29,14 +29,7 @@ export const Login: React.FC = () => {
       navigate(from, { replace: true });
       return;
     }
-
-    if (role === 'admin') {
-      navigate('/admin');
-    } else if (role === 'responsable') {
-      navigate('/manager');
-    } else {
-      navigate('/agent');
-    }
+    navigate('/admin');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
