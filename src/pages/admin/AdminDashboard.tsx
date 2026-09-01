@@ -266,7 +266,13 @@ export const AdminDashboard: React.FC = () => {
         <div className="card">
           <div className="card-header">
             <span className="card-title">Volume de Carburant Distribué</span>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17" />
+              <path d="M15 9h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L20.5 6.5" />
+              <path d="M3 22h12" />
+              <path d="M6 8h6" />
+              <path d="M6 12h6" />
+            </svg>
           </div>
           <div className="card-value">{totalFuelQuantity.toLocaleString(undefined, { maximumFractionDigits: 1 })} L</div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sur {fuelFills.length} ravitaillements</p>
@@ -294,11 +300,11 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Main Visuals & Logs Grid */}
-      <div className="grid grid-2" style={{ alignItems: 'start' }}>
+      <div className="grid grid-2" style={{ alignItems: 'stretch' }}>
         
         {/* Left Side: Citerne visualization */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '38px' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
               Niveau de Citerne Principal (Gasoil)
             </h2>
@@ -335,17 +341,21 @@ export const AdminDashboard: React.FC = () => {
               </div>
             )}
           </div>
-          <TankVisualization 
-            capacity={tank ? tank.capacity : 50000} 
-            currentVolume={tank ? tank.currentVolume : 0} 
-            alertThreshold={tank ? tank.alertThreshold : 5000} 
-          />
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.75rem', flex: 1, borderRadius: '16px' }}>
+            <TankVisualization 
+              capacity={tank ? tank.capacity : 50000} 
+              currentVolume={tank ? tank.currentVolume : 0} 
+              alertThreshold={tank ? tank.alertThreshold : 5000} 
+              width={260}
+              height={370}
+            />
+          </div>
         </div>
 
         {/* Right Side: Fluid Barrels List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '38px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
               Stock des Barils (Huiles & Fluides)
             </h2>
             <Link to="/admin/barrels" className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
@@ -353,7 +363,7 @@ export const AdminDashboard: React.FC = () => {
             </Link>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
             {barrels.map((b) => (
               <BarrelCard 
                 key={b.id} 
