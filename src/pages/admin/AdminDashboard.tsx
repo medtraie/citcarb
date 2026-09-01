@@ -443,30 +443,47 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     {user.role === 'admin' && (
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem' }}>
+                          <button
+                            className="btn btn-primary"
+                            style={{ 
+                              padding: '0.3rem 0.55rem', 
+                              fontSize: '0.78rem', 
+                              backgroundColor: f.status === 'pending' ? 'var(--accent-green)' : 'rgba(16, 185, 129, 0.18)', 
+                              color: f.status === 'pending' ? '#fff' : 'var(--accent-green)',
+                              borderColor: 'var(--accent-green)',
+                              fontWeight: 700,
+                              borderRadius: '6px'
+                            }}
+                            onClick={() => handleConfirmFill(f.id)}
+                            title="Confirmer / Valider ce plein"
+                          >
+                            ✓
+                          </button>
                           <button
                             className="btn"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--bg-input)' }}
+                            style={{ 
+                              padding: '0.3rem 0.55rem', 
+                              fontSize: '0.78rem', 
+                              backgroundColor: 'rgba(0, 210, 255, 0.12)', 
+                              color: 'var(--accent-cyan)',
+                              borderColor: 'rgba(0, 210, 255, 0.25)',
+                              borderRadius: '6px' 
+                            }}
                             onClick={() => setSelectedFillToEdit(f)}
                             title="Modifier ce plein"
                           >
                             ✏️
                           </button>
-                          {f.status === 'pending' && (
-                            <button
-                              className="btn btn-primary"
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--accent-green)' }}
-                              onClick={() => handleConfirmFill(f.id)}
-                              title="Valider"
-                            >
-                              ✓
-                            </button>
-                          )}
                           <button
                             className="btn btn-danger"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                            style={{ 
+                              padding: '0.3rem 0.55rem', 
+                              fontSize: '0.78rem',
+                              borderRadius: '6px'
+                            }}
                             onClick={() => handleDeleteFill(f.id)}
-                            title="Supprimer"
+                            title="Supprimer ce plein"
                           >
                             ✕
                           </button>

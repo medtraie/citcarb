@@ -1560,7 +1560,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       const demo = getDemoData();
       demo.fuelFills = (demo.fuelFills || []).map((f: any) => {
         if (f.id === fillId) {
-          return { ...f, status: 'confirmed', notes: target.notes, validatedAt: nowStr, validatedBy: ownerId };
+          return { ...f, status: 'confirmed', anomalyDetected: false, anomalyType: undefined, notes: target.notes, validatedAt: nowStr, validatedBy: ownerId };
         }
         return f;
       });
@@ -1579,10 +1579,12 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      // 1. Update fuel_fill status & clean notes
+      // 1. Update fuel_fill status, clear anomaly & clean notes
       const payload: any = {
         notes: cleanNotes,
         status: 'confirmed',
+        anomaly_detected: false,
+        anomaly_type: null,
         validated_at: nowStr,
         validated_by: ownerId
       };
@@ -1593,7 +1595,10 @@ export const useDataStore = create<DataState>((set, get) => ({
         .eq('id', fillId);
 
       if (fillErr && (fillErr.message.includes('status') || fillErr.code === '42703')) {
-        await supabase.from('fuel_fills').update({ notes: cleanNotes }).eq('id', fillId);
+        delete payload.status;
+        delete payload.validated_at;
+        delete payload.validated_by;
+        await supabase.from('fuel_fills').update(payload).eq('id', fillId);
       }
 
       // 2. Finalize vehicle mileage
