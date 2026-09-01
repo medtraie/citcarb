@@ -290,9 +290,20 @@ export const AdminDashboard: React.FC = () => {
         <div className="card">
           <div className="card-header">
             <span className="card-title">Anomalies Détectées</span>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path 
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" 
+                fill="rgba(245, 158, 11, 0.18)" 
+                stroke="#F59E0B" 
+                strokeWidth="2.2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              />
+              <line x1="12" y1="9" x2="12" y2="13.5" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
+              <circle cx="12" cy="17" r="1.25" fill="#F59E0B" />
+            </svg>
           </div>
-          <div className={`card-value ${totalAnomalies > 0 ? 'pulse-warn' : ''}`} style={{ color: totalAnomalies > 0 ? 'var(--accent-red)' : 'var(--text-primary)' }}>
+          <div className={`card-value ${totalAnomalies > 0 ? 'pulse-warn' : ''}`} style={{ color: totalAnomalies > 0 ? '#F59E0B' : 'var(--text-primary)' }}>
             {totalAnomalies}
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Consommation ou kilométrages suspects</p>
