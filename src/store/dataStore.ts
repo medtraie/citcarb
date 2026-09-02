@@ -57,6 +57,7 @@ interface DataState {
     notes?: string;
     performedBy: string;
     ownerId: string;
+    createdAt?: string;
   }) => Promise<void>;
   fetchTankMovements: (ownerId: string) => Promise<void>;
 
@@ -786,8 +787,8 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
   },
 
-  refillTank: async ({ tankId, quantity, supplier, price, notes, performedBy, ownerId }) => {
-    const nowStr = new Date().toISOString();
+  refillTank: async ({ tankId, quantity, supplier, price, notes, performedBy, ownerId, createdAt }) => {
+    const nowStr = createdAt || new Date().toISOString();
     const movId = generateUUID();
 
     if (ownerId === 'demo_admin_uid') {

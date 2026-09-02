@@ -14,12 +14,49 @@ export const TankRefillForm: React.FC<TankRefillFormProps> = ({
   const { user } = useAuthStore();
   const { refillTank, tank } = useDataStore();
 
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  });
   const [quantity, setQuantity] = useState('');
   const [supplier, setSupplier] = useState('');
   const [price, setPrice] = useState('');
+  const [unitPrice, setUnitPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleQuantityChange = (val: string) => {
+    setQuantity(val);
+    const qtyNum = parseFloat(val);
+    const priceNum = parseFloat(price);
+    if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(priceNum)) {
+      setUnitPrice((priceNum / qtyNum).toFixed(2));
+    }
+  };
+
+  const handlePriceChange = (val: string) => {
+    setPrice(val);
+    const priceNum = parseFloat(val);
+    const qtyNum = parseFloat(quantity);
+    if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(priceNum)) {
+      setUnitPrice((priceNum / qtyNum).toFixed(2));
+    } else if (!val) {
+      setUnitPrice('');
+    }
+  };
+
+  const handleUnitPriceChange = (val: string) => {
+    setUnitPrice(val);
+    const uPriceNum = parseFloat(val);
+    const qtyNum = parseFloat(quantity);
+    if (!isNaN(qtyNum) && qtyNum > 0 && !isNaN(uPriceNum)) {
+      setPrice((qtyNum * uPriceNum).toFixed(2));
+    } else if (!val) {
+      setPrice('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +85,8 @@ export const TankRefillForm: React.FC<TankRefillFormProps> = ({
         price: priceNum,
         notes: notes.trim() || undefined,
         performedBy: user.id,
-        ownerId: user.ownerId
+        ownerId: user.ownerId,
+        createdAt: date ? new Date(date).toISOString() : undefined
       });
       onSuccess();
     } catch (err: any) {
@@ -95,6 +133,17 @@ export const TankRefillForm: React.FC<TankRefillFormProps> = ({
       </div>
 
       <div className="form-group">
+        <label className="form-label">Date du ravitaillement</label>
+        <input 
+          type="datetime-local" 
+          className="form-control"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="form-group">
         <label className="form-label">Quantité de carburant ajoutée (Litres)</label>
         <input 
           type="number" 
@@ -103,7 +152,7 @@ export const TankRefillForm: React.FC<TankRefillFormProps> = ({
           min="1"
           max={tank.capacity - tank.currentVolume}
           value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
+          onChange={(e) => handleQuantityChange(e.target.value)}
           required
         />
       </div>
@@ -123,11 +172,24 @@ export const TankRefillForm: React.FC<TankRefillFormProps> = ({
         <label className="form-label">Coût total (DH) (Optionnel)</label>
         <input 
           type="number" 
+          step="0.01"
           className="form-control"
           placeholder="Ex: 24000"
           min="0"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          onChange={(e) => handlePriceChange(e.target.value)}
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Prix unitaire par litre (DH/L) (Calculé automatiquement)</label>
+        <input 
+          type="number" 
+          step="0.01"
+          className="form-control"
+          placeholder="Ex: 12.00"
+          value={unitPrice}
+          onChange={(e) => handleUnitPriceChange(e.target.value)}
         />
       </div>
 
