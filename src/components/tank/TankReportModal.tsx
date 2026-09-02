@@ -92,10 +92,24 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
     return matchDate && matchVeh;
   });
 
+  const getRefillCost = (r: { quantity: number; price?: number | null }) => {
+    if (r.price && r.price > 0) {
+      return r.price > 100 ? r.price : r.quantity * r.price;
+    }
+    return r.quantity * pricePerLiter;
+  };
+
+  const getRefillUnitPrice = (r: { quantity: number; price?: number | null }) => {
+    if (r.price && r.price > 0) {
+      return r.price > 100 ? r.price / r.quantity : r.price;
+    }
+    return pricePerLiter;
+  };
+
   // Key Statistics
   const totalRefillsCount = filteredRefills.length;
   const totalRefilledVolume = filteredRefills.reduce((sum, r) => sum + r.quantity, 0);
-  const totalRefillCost = filteredRefills.reduce((sum, r) => sum + ((r.price || pricePerLiter) * r.quantity), 0);
+  const totalRefillCost = filteredRefills.reduce((sum, r) => sum + getRefillCost(r), 0);
 
   const totalFillsCount = filteredFills.length;
   const totalConsumedVolume = filteredFills.reduce((sum, f) => sum + f.quantity, 0);
@@ -227,8 +241,8 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
       'Date & Heure': new Date(r.createdAt).toLocaleString('fr-FR'),
       'Quantité Livrée (L)': r.quantity,
       'Fournisseur': r.supplier || 'Standard',
-      'Prix Unitaire (MAD/L)': r.price || pricePerLiter,
-      'Montant Total (MAD)': r.quantity * (r.price || pricePerLiter),
+      'Prix Unitaire (MAD/L)': getRefillUnitPrice(r),
+      'Montant Total (MAD)': getRefillCost(r),
       'Bon de Livraison / Notes': r.notes || '-',
       'Opérateur / Réceptionnaire': r.performedBy || 'Agent'
     }));
@@ -581,8 +595,8 @@ export const TankReportModal: React.FC<TankReportModalProps> = ({ isOpen, onClos
                   </thead>
                   <tbody>
                     {filteredRefills.map(r => {
-                      const unitPrice = r.price || pricePerLiter;
-                      const amount = r.quantity * unitPrice;
+                      const unitPrice = getRefillUnitPrice(r);
+                      const amount = getRefillCost(r);
                       return (
                         <tr key={r.id}>
                           <td style={{ fontWeight: 600 }}>{new Date(r.createdAt).toLocaleString('fr-FR')}</td>
