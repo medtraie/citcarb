@@ -15,34 +15,35 @@ const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, 
     <div style={{
       backgroundColor: 'var(--bg-input)',
       border: '1px solid var(--border-color)',
-      borderRadius: '8px',
-      padding: '0.85rem',
+      borderRadius: '10px',
+      padding: '1rem',
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.65rem'
+      gap: '0.75rem',
+      boxSizing: 'border-box'
     }}>
-      <div style={{ fontWeight: 600, fontSize: '0.85rem', color: accentColor, borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.4rem' }}>
-        📄 {title}
+      <div style={{ fontWeight: 600, fontSize: '0.88rem', color: accentColor, borderBottom: '1px dashed var(--border-color)', paddingBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <span>📄</span> {title}
       </div>
 
       <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.2rem' }}>Date d'expiration</label>
+        <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '0.25rem' }}>Date d'expiration</label>
         <input 
           type="date" 
           className="form-control"
-          style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+          style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
           value={config.expirationDate || ''}
           onChange={(e) => onChange({ ...config, expirationDate: e.target.value })}
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.7rem', marginBottom: '0.2rem' }}>Intervalle (jours)</label>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>Intervalle (jours)</label>
           <input 
             type="number" 
             className="form-control"
-            style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+            style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
             placeholder="365"
             min="1"
             value={config.intervalDays ?? 365}
@@ -50,11 +51,11 @@ const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, 
           />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.7rem', marginBottom: '0.2rem' }}>Rappel (jours avant)</label>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>Rappel (jours avant)</label>
           <input 
             type="number" 
             className="form-control"
-            style={{ fontSize: '0.8rem', padding: '0.35rem 0.5rem' }}
+            style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
             placeholder="30"
             min="1"
             value={config.reminderDaysBefore ?? 30}
@@ -63,17 +64,17 @@ const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, 
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.25rem' }}>
         <input 
           type="checkbox" 
           id={`autoRenew_${title.replace(/[^a-zA-Z0-9]/g, '_')}`}
-          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+          style={{ width: '17px', height: '17px', cursor: 'pointer' }}
           checked={config.autoRenew || false}
           onChange={(e) => onChange({ ...config, autoRenew: e.target.checked })}
         />
         <label 
           htmlFor={`autoRenew_${title.replace(/[^a-zA-Z0-9]/g, '_')}`}
-          style={{ cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}
+          style={{ cursor: 'pointer', fontSize: '0.78rem', color: 'var(--text-primary)', margin: 0, fontWeight: 500, userSelect: 'none' }}
         >
           Renouvellement automatique
         </label>
@@ -375,7 +376,7 @@ export const DriversPage: React.FC = () => {
       {/* Add/Edit Modal */}
       {modalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal-content" style={{ width: '95vw', maxWidth: '920px', maxHeight: '90vh', overflowY: 'auto', padding: '1.75rem' }}>
             <button className="modal-close" onClick={() => setModalOpen(false)}>&times;</button>
             
             <h2>{editingDriver ? 'Modifier le Chauffeur' : 'Nouveau Chauffeur'}</h2>
@@ -470,7 +471,7 @@ export const DriversPage: React.FC = () => {
                   2. Dates d'expiration & Alertes par document
                 </h4>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
                   <DocConfigCard 
                     title="Permis de conduire" 
                     config={licenseConfig} 
