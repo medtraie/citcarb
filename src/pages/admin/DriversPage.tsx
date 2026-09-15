@@ -30,9 +30,6 @@ export const DriversPage: React.FC = () => {
   const [professionalCardExpirationDate, setProfessionalCardExpirationDate] = useState('');
   const [adrTrainingExpirationDate, setAdrTrainingExpirationDate] = useState('');
 
-  // Suivi & Maintenance
-  const [lastInterviewDate, setLastInterviewDate] = useState('');
-
   // Alert Settings & Auto-Renew
   const [alertMode, setAlertMode] = useState<'days'>('days');
   const [intervalDays, setIntervalDays] = useState<number>(365);
@@ -59,7 +56,6 @@ export const DriversPage: React.FC = () => {
     setMedicalCheckupExpirationDate('');
     setProfessionalCardExpirationDate('');
     setAdrTrainingExpirationDate('');
-    setLastInterviewDate('');
     setAlertMode('days');
     setIntervalDays(365);
     setReminderDaysBefore(30);
@@ -79,7 +75,6 @@ export const DriversPage: React.FC = () => {
     setMedicalCheckupExpirationDate(d.medicalCheckupExpirationDate || '');
     setProfessionalCardExpirationDate(d.professionalCardExpirationDate || '');
     setAdrTrainingExpirationDate(d.adrTrainingExpirationDate || '');
-    setLastInterviewDate(d.lastInterviewDate || '');
     setAlertMode(d.alertMode || 'days');
     setIntervalDays(d.intervalDays ?? 365);
     setReminderDaysBefore(d.reminderDaysBefore ?? 30);
@@ -105,7 +100,6 @@ export const DriversPage: React.FC = () => {
         medicalCheckupExpirationDate: medicalCheckupExpirationDate || undefined,
         professionalCardExpirationDate: professionalCardExpirationDate || undefined,
         adrTrainingExpirationDate: adrTrainingExpirationDate || undefined,
-        lastInterviewDate: lastInterviewDate || undefined,
         alertMode,
         intervalDays: Number(intervalDays) || 365,
         reminderDaysBefore: Number(reminderDaysBefore) || 30,
@@ -157,11 +151,11 @@ export const DriversPage: React.FC = () => {
     const diffDays = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
 
     if (diffDays < 0) {
-      return <span style={{ color: 'var(--accent-red)', fontWeight: 700, fontSize: '0.75rem' }}>Expiré ({Math.abs(diffDays)} j)</span>;
+      return <span style={{ color: 'var(--accent-red)', fontWeight: 700, fontSize: '0.72rem', marginLeft: '4px' }}>Expiré ({Math.abs(diffDays)} j)</span>;
     } else if (diffDays <= reminderDays) {
-      return <span style={{ color: 'var(--accent-warning)', fontWeight: 700, fontSize: '0.75rem' }}>Expire dans {diffDays} j</span>;
+      return <span style={{ color: 'var(--accent-warning)', fontWeight: 700, fontSize: '0.72rem', marginLeft: '4px' }}>Expire dans {diffDays} j</span>;
     }
-    return <span style={{ color: 'var(--accent-green)', fontSize: '0.75rem' }}>Valide ({diffDays} j)</span>;
+    return <span style={{ color: 'var(--accent-green)', fontSize: '0.72rem', marginLeft: '4px' }}>Valide ({diffDays} j)</span>;
   };
 
   if (!user) return null;
@@ -188,84 +182,105 @@ export const DriversPage: React.FC = () => {
         </div>
       ) : (
         <div className="table-responsive">
-          <table className="table">
+          <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
             <thead>
               <tr>
-                <th>Nom & Téléphone</th>
-                <th>CIN & Permis</th>
-                <th>Dates d'Expiration</th>
-                <th>Dernier Entretien</th>
-                <th>Alertes & Renouvellement</th>
-                <th>Statut</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+                <th style={{ width: '22%' }}>Chauffeur & Contact</th>
+                <th style={{ width: '18%' }}>CIN & N° Permis</th>
+                <th style={{ width: '28%' }}>Dates d'Expiration</th>
+                <th style={{ width: '15%' }}>Renouvellement & Alertes</th>
+                <th style={{ width: '8%' }}>Statut</th>
+                <th style={{ width: '9%', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {drivers.map(d => (
-                <tr key={d.id}>
-                  <td>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{d.fullName}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{d.phone}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{d.cin}</div>
-                    <div style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>{d.licenseNumber}</div>
-                  </td>
-                  <td style={{ fontSize: '0.8rem' }}>
-                    <div><strong>Permis:</strong> {formatDate(d.licenseExpirationDate)} {getExpirationBadge(d.licenseExpirationDate, d.reminderDaysBefore)}</div>
-                    <div><strong>Visite Méd.:</strong> {formatDate(d.medicalCheckupExpirationDate)} {getExpirationBadge(d.medicalCheckupExpirationDate, d.reminderDaysBefore)}</div>
-                    {d.professionalCardExpirationDate && (
-                      <div><strong>Carte Pro:</strong> {formatDate(d.professionalCardExpirationDate)}</div>
-                    )}
-                    {d.adrTrainingExpirationDate && (
-                      <div><strong>Formation ADR:</strong> {formatDate(d.adrTrainingExpirationDate)}</div>
-                    )}
-                  </td>
-                  <td style={{ fontSize: '0.8rem' }}>
-                    {formatDate(d.lastInterviewDate)}
-                  </td>
-                  <td style={{ fontSize: '0.8rem' }}>
-                    <div>Mode: {d.alertMode === 'days' ? 'Par jours' : 'Par jours'}</div>
-                    <div>Intervalle: {d.intervalDays || 365} j</div>
-                    <div>Rappel: {d.reminderDaysBefore || 30} j avant</div>
-                    {d.autoRenew ? (
-                      <span className="badge badge-success" style={{ fontSize: '0.7rem', marginTop: '4px' }}>⚡ Auto-Renouvellement</span>
-                    ) : (
-                      <span className="badge" style={{ fontSize: '0.7rem', marginTop: '4px', opacity: 0.6 }}>Renouvellement Manuel</span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={getStatusBadgeClass(d.status)}>
-                      {getStatusLabel(d.status)}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                    {user.role === 'admin' && (
-                      <>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}
-                          onClick={() => openEditModal(d)}
-                        >
-                          Modifier
-                        </button>
-                        <button 
-                          className="btn btn-danger" 
-                          style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                          title="Supprimer ce chauffeur"
-                          onClick={() => {
-                            if (window.confirm(`Êtes-vous sûr de vouloir supprimer le chauffeur ${d.fullName} ?`)) {
-                              deleteDriver(d.id, user!.ownerId);
-                            }
-                          }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {drivers.map(d => {
+                const hasPhone = d.phone && d.phone.length > 2 && d.phone !== d.cin;
+                const hasCin = d.cin && d.cin.length > 1;
+                const hasLicense = d.licenseNumber && d.licenseNumber.length > 1;
+                const hasExpirations = d.licenseExpirationDate || d.medicalCheckupExpirationDate || d.professionalCardExpirationDate || d.adrTrainingExpirationDate;
+
+                return (
+                  <tr key={d.id}>
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{d.fullName}</div>
+                      {hasPhone && (
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                          📞 {d.phone}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {hasCin && <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-primary)' }}>CIN: <strong>{d.cin}</strong></div>}
+                      {hasLicense && <div style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)', fontSize: '0.8rem', marginTop: '2px' }}>Permis: <strong>{d.licenseNumber}</strong></div>}
+                      {!hasCin && !hasLicense && <span style={{ opacity: 0.5 }}>-</span>}
+                    </td>
+                    <td style={{ fontSize: '0.8rem' }}>
+                      {hasExpirations ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          {d.licenseExpirationDate && (
+                            <div><strong>Permis:</strong> {formatDate(d.licenseExpirationDate)} {getExpirationBadge(d.licenseExpirationDate, d.reminderDaysBefore)}</div>
+                          )}
+                          {d.medicalCheckupExpirationDate && (
+                            <div><strong>Visite Méd.:</strong> {formatDate(d.medicalCheckupExpirationDate)} {getExpirationBadge(d.medicalCheckupExpirationDate, d.reminderDaysBefore)}</div>
+                          )}
+                          {d.professionalCardExpirationDate && (
+                            <div><strong>Carte Pro:</strong> {formatDate(d.professionalCardExpirationDate)} {getExpirationBadge(d.professionalCardExpirationDate, d.reminderDaysBefore)}</div>
+                          )}
+                          {d.adrTrainingExpirationDate && (
+                            <div><strong>ADR:</strong> {formatDate(d.adrTrainingExpirationDate)} {getExpirationBadge(d.adrTrainingExpirationDate, d.reminderDaysBefore)}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ opacity: 0.5, fontStyle: 'italic' }}>Aucune date définie</span>
+                      )}
+                    </td>
+                    <td>
+                      {d.autoRenew ? (
+                        <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}>
+                          ⚡ Auto ({d.intervalDays || 365} j)
+                        </span>
+                      ) : (
+                        <span className="badge" style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem', opacity: 0.8, backgroundColor: 'var(--bg-input)' }}>
+                          Manuel (Rappel: {d.reminderDaysBefore || 30} j)
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={getStatusBadgeClass(d.status)}>
+                        {getStatusLabel(d.status)}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                        {user.role === 'admin' && (
+                          <>
+                            <button 
+                              className="btn btn-secondary" 
+                              style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                              onClick={() => openEditModal(d)}
+                            >
+                              Modifier
+                            </button>
+                            <button 
+                              className="btn btn-danger" 
+                              style={{ padding: '0.35rem 0.55rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--accent-red)', color: 'var(--accent-red)', cursor: 'pointer' }}
+                              title="Supprimer ce chauffeur"
+                              onClick={() => {
+                                if (window.confirm(`Êtes-vous sûr de vouloir supprimer le chauffeur ${d.fullName} ?`)) {
+                                  deleteDriver(d.id, user!.ownerId);
+                                }
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -407,24 +422,9 @@ export const DriversPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Section 3: Suivi & Entretien */}
-              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-orange)', marginBottom: '0.75rem' }}>3. Suivi & Entretien</h4>
-                
-                <div className="form-group">
-                  <label className="form-label">Dernière date d'entretien</label>
-                  <input 
-                    type="date" 
-                    className="form-control"
-                    value={lastInterviewDate}
-                    onChange={(e) => setLastInterviewDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Section 4: Mode d'alerte, Intervalle & Renouvellement */}
+              {/* Section 3: Mode d'alerte, Intervalle & Renouvellement */}
               <div>
-                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-purple, #a855f7)', marginBottom: '0.75rem' }}>4. Mode d'alerte & Renouvellement automatique</h4>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-purple, #a855f7)', marginBottom: '0.75rem' }}>3. Mode d'alerte & Renouvellement automatique</h4>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
                   <div className="form-group">

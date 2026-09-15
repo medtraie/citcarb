@@ -52,9 +52,6 @@ export interface Driver {
   professionalCardExpirationDate?: string;
   adrTrainingExpirationDate?: string;
 
-  // Entretien & Suivi
-  lastInterviewDate?: string;
-
   // Alert Settings
   alertMode?: 'days';
   intervalDays?: number;
