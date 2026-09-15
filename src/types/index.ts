@@ -156,7 +156,7 @@ export interface AppNotification {
   createdAt: string;
 }
 
-export type RevisionType = 'vidange' | 'tachygraphe' | 'visite_technique' | 'assurance' | 'vignette' | 'autre';
+export type RevisionType = 'vidange' | 'tachygraphe' | 'visite_technique' | 'assurance' | 'vignette' | 'carte_grise' | 'carte_circulation' | 'extincteur' | 'autre';
 export type RevisionMode = 'days' | 'mileage';
 export type RevisionStatus = 'up_to_date' | 'due_soon' | 'overdue';
 

@@ -53,6 +53,9 @@ export const RevisionsPage: React.FC = () => {
       case 'visite_technique': return 'Visite technique';
       case 'assurance': return 'Assurance';
       case 'vignette': return 'Vignette';
+      case 'carte_grise': return 'Carte Grise';
+      case 'carte_circulation': return 'Carte Circulation';
+      case 'extincteur': return 'Extincteur';
       default: return 'Autre Révision';
     }
   };
@@ -64,6 +67,9 @@ export const RevisionsPage: React.FC = () => {
       case 'visite_technique': return { bg: 'rgba(236, 72, 153, 0.15)', color: '#F472B6', border: 'rgba(236, 72, 153, 0.3)' };
       case 'assurance': return { bg: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', border: 'rgba(245, 158, 11, 0.3)' };
       case 'vignette': return { bg: 'rgba(16, 185, 129, 0.15)', color: '#34D399', border: 'rgba(16, 185, 129, 0.3)' };
+      case 'carte_grise': return { bg: 'rgba(14, 165, 233, 0.15)', color: '#38BDF8', border: 'rgba(14, 165, 233, 0.3)' };
+      case 'carte_circulation': return { bg: 'rgba(99, 102, 241, 0.15)', color: '#818CF8', border: 'rgba(99, 102, 241, 0.3)' };
+      case 'extincteur': return { bg: 'rgba(239, 68, 68, 0.15)', color: '#F87171', border: 'rgba(239, 68, 68, 0.3)' };
       default: return { bg: 'rgba(148, 163, 184, 0.15)', color: '#94A3B8', border: 'rgba(148, 163, 184, 0.3)' };
     }
   };
@@ -682,7 +688,7 @@ export const RevisionsPage: React.FC = () => {
             >
               Toutes les catégories
             </button>
-            {(['vidange', 'visite_technique', 'tachygraphe', 'assurance', 'vignette', 'autre'] as RevisionType[]).map(t => {
+            {(['vidange', 'visite_technique', 'tachygraphe', 'assurance', 'vignette', 'carte_grise', 'carte_circulation', 'extincteur', 'autre'] as RevisionType[]).map(t => {
               const style = getTypeBadgeStyle(t);
               const isSelected = analyticsTypeFilter === t;
               return (
@@ -763,7 +769,7 @@ export const RevisionsPage: React.FC = () => {
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                {(['vidange', 'assurance', 'visite_technique', 'vignette', 'tachygraphe', 'autre'] as RevisionType[]).map(t => {
+                {(['vidange', 'assurance', 'visite_technique', 'vignette', 'tachygraphe', 'carte_grise', 'carte_circulation', 'extincteur', 'autre'] as RevisionType[]).map(t => {
                   const subCost = analyticsRevisions.filter(r => r.type === t).reduce((sum, r) => sum + (r.cost || 0), 0);
                   const count = analyticsRevisions.filter(r => r.type === t).length;
                   const percent = analyticsTotalCost > 0 ? Math.round((subCost / analyticsTotalCost) * 100) : 0;
