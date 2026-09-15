@@ -591,6 +591,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       const docConfigs = (d as any).document_configs || (d as any).documentConfigs || {};
 
       const licenseConfig: DocumentConfig = processDocAutoRenew(d.licenseConfig || {
+        lastDate: docConfigs.license?.lastDate,
         expirationDate: docConfigs.license?.expirationDate || d.licenseExpirationDate,
         intervalDays: docConfigs.license?.intervalDays ?? d.intervalDays ?? 365,
         reminderDaysBefore: docConfigs.license?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
@@ -598,6 +599,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       }) || {};
 
       const medicalCheckupConfig: DocumentConfig = processDocAutoRenew(d.medicalCheckupConfig || {
+        lastDate: docConfigs.medical?.lastDate,
         expirationDate: docConfigs.medical?.expirationDate || d.medicalCheckupExpirationDate,
         intervalDays: docConfigs.medical?.intervalDays ?? d.intervalDays ?? 365,
         reminderDaysBefore: docConfigs.medical?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
@@ -605,6 +607,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       }) || {};
 
       const professionalCardConfig: DocumentConfig = processDocAutoRenew(d.professionalCardConfig || {
+        lastDate: docConfigs.card?.lastDate,
         expirationDate: docConfigs.card?.expirationDate || d.professionalCardExpirationDate,
         intervalDays: docConfigs.card?.intervalDays ?? d.intervalDays ?? 365,
         reminderDaysBefore: docConfigs.card?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
@@ -612,6 +615,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       }) || {};
 
       const adrTrainingConfig: DocumentConfig = processDocAutoRenew(d.adrTrainingConfig || {
+        lastDate: docConfigs.adr?.lastDate,
         expirationDate: docConfigs.adr?.expirationDate || d.adrTrainingExpirationDate,
         intervalDays: docConfigs.adr?.intervalDays ?? d.intervalDays ?? 365,
         reminderDaysBefore: docConfigs.adr?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
@@ -650,6 +654,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       const mapped: Driver[] = (data || []).map(d => {
         const docConfigs = d.document_configs || {};
         const licenseConfig: DocumentConfig = processDocAutoRenew({
+          lastDate: docConfigs.license?.lastDate,
           expirationDate: docConfigs.license?.expirationDate || d.license_expiration_date,
           intervalDays: docConfigs.license?.intervalDays ?? d.interval_days ?? 365,
           reminderDaysBefore: docConfigs.license?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
@@ -657,6 +662,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         }) || {};
 
         const medicalCheckupConfig: DocumentConfig = processDocAutoRenew({
+          lastDate: docConfigs.medical?.lastDate,
           expirationDate: docConfigs.medical?.expirationDate || d.medical_checkup_expiration_date,
           intervalDays: docConfigs.medical?.intervalDays ?? d.interval_days ?? 365,
           reminderDaysBefore: docConfigs.medical?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
@@ -664,6 +670,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         }) || {};
 
         const professionalCardConfig: DocumentConfig = processDocAutoRenew({
+          lastDate: docConfigs.card?.lastDate,
           expirationDate: docConfigs.card?.expirationDate || d.professional_card_expiration_date,
           intervalDays: docConfigs.card?.intervalDays ?? d.interval_days ?? 365,
           reminderDaysBefore: docConfigs.card?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
@@ -671,6 +678,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         }) || {};
 
         const adrTrainingConfig: DocumentConfig = processDocAutoRenew({
+          lastDate: docConfigs.adr?.lastDate,
           expirationDate: docConfigs.adr?.expirationDate || d.adr_training_expiration_date,
           intervalDays: docConfigs.adr?.intervalDays ?? d.interval_days ?? 365,
           reminderDaysBefore: docConfigs.adr?.reminderDaysBefore ?? d.reminder_days_before ?? 30,

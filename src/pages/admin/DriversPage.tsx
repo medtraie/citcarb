@@ -3,6 +3,15 @@ import { useAuthStore } from '../../store/authStore';
 import { useDataStore } from '../../store/dataStore';
 import { Driver, DriverStatus, DocumentConfig } from '../../types';
 
+const calcExpirationDate = (lastDateStr?: string, days?: number): string => {
+  if (!lastDateStr) return '';
+  const d = new Date(lastDateStr);
+  if (isNaN(d.getTime())) return '';
+  const interval = days && days > 0 ? days : 365;
+  d.setDate(d.getDate() + interval);
+  return d.toISOString().split('T')[0];
+};
+
 interface DocConfigCardProps {
   title: string;
   config: DocumentConfig;
@@ -11,6 +20,24 @@ interface DocConfigCardProps {
 }
 
 const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, accentColor = 'var(--accent-cyan)' }) => {
+  const handleLastDateChange = (newLastDate: string) => {
+    const calculatedExp = calcExpirationDate(newLastDate, config.intervalDays ?? 365);
+    onChange({
+      ...config,
+      lastDate: newLastDate,
+      expirationDate: calculatedExp || config.expirationDate
+    });
+  };
+
+  const handleIntervalChange = (newInterval: number) => {
+    const calculatedExp = config.lastDate ? calcExpirationDate(config.lastDate, newInterval) : config.expirationDate;
+    onChange({
+      ...config,
+      intervalDays: newInterval,
+      expirationDate: calculatedExp
+    });
+  };
+
   return (
     <div style={{
       backgroundColor: 'var(--bg-input)',
@@ -26,20 +53,23 @@ const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, 
         <span>📄</span> {title}
       </div>
 
-      <div className="form-group" style={{ margin: 0 }}>
-        <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '0.25rem' }}>Date d'expiration</label>
-        <input 
-          type="date" 
-          className="form-control"
-          style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
-          value={config.expirationDate || ''}
-          onChange={(e) => onChange({ ...config, expirationDate: e.target.value })}
-        />
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>Intervalle (jours)</label>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>
+            Dernière date d'entretien
+          </label>
+          <input 
+            type="date" 
+            className="form-control"
+            style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
+            value={config.lastDate || ''}
+            onChange={(e) => handleLastDateChange(e.target.value)}
+          />
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>
+            Intervalle (jours)
+          </label>
           <input 
             type="number" 
             className="form-control"
@@ -47,11 +77,28 @@ const DocConfigCard: React.FC<DocConfigCardProps> = ({ title, config, onChange, 
             placeholder="365"
             min="1"
             value={config.intervalDays ?? 365}
-            onChange={(e) => onChange({ ...config, intervalDays: Number(e.target.value) })}
+            onChange={(e) => handleIntervalChange(Number(e.target.value))}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>
+            Date d'expiration {config.lastDate ? '(Calculée ⚡)' : ''}
+          </label>
+          <input 
+            type="date" 
+            className="form-control"
+            style={{ fontSize: '0.82rem', padding: '0.4rem 0.6rem', width: '100%' }}
+            value={config.expirationDate || ''}
+            onChange={(e) => onChange({ ...config, expirationDate: e.target.value })}
           />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>Rappel (jours avant)</label>
+          <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', whiteSpace: 'nowrap' }}>
+            Rappel (jours avant)
+          </label>
           <input 
             type="number" 
             className="form-control"
@@ -105,10 +152,10 @@ export const DriversPage: React.FC = () => {
   const [status, setStatus] = useState<DriverStatus>('active');
 
   // Per-document configurations
-  const [licenseConfig, setLicenseConfig] = useState<DocumentConfig>({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-  const [medicalConfig, setMedicalConfig] = useState<DocumentConfig>({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-  const [cardConfig, setCardConfig] = useState<DocumentConfig>({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-  const [adrConfig, setAdrConfig] = useState<DocumentConfig>({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+  const [licenseConfig, setLicenseConfig] = useState<DocumentConfig>({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+  const [medicalConfig, setMedicalConfig] = useState<DocumentConfig>({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+  const [cardConfig, setCardConfig] = useState<DocumentConfig>({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+  const [adrConfig, setAdrConfig] = useState<DocumentConfig>({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -126,10 +173,10 @@ export const DriversPage: React.FC = () => {
     setCin('');
     setLicenseNumber('');
     setStatus('active');
-    setLicenseConfig({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-    setMedicalConfig({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-    setCardConfig({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
-    setAdrConfig({ expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+    setLicenseConfig({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+    setMedicalConfig({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+    setCardConfig({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
+    setAdrConfig({ lastDate: '', expirationDate: '', intervalDays: 365, reminderDaysBefore: 30, autoRenew: false });
     setError(null);
     setModalOpen(true);
   };
@@ -143,24 +190,28 @@ export const DriversPage: React.FC = () => {
     setStatus(d.status);
 
     setLicenseConfig(d.licenseConfig || {
+      lastDate: '',
       expirationDate: d.licenseExpirationDate || '',
       intervalDays: d.intervalDays ?? 365,
       reminderDaysBefore: d.reminderDaysBefore ?? 30,
       autoRenew: d.autoRenew || false
     });
     setMedicalConfig(d.medicalCheckupConfig || {
+      lastDate: '',
       expirationDate: d.medicalCheckupExpirationDate || '',
       intervalDays: d.intervalDays ?? 365,
       reminderDaysBefore: d.reminderDaysBefore ?? 30,
       autoRenew: d.autoRenew || false
     });
     setCardConfig(d.professionalCardConfig || {
+      lastDate: '',
       expirationDate: d.professionalCardExpirationDate || '',
       intervalDays: d.intervalDays ?? 365,
       reminderDaysBefore: d.reminderDaysBefore ?? 30,
       autoRenew: d.autoRenew || false
     });
     setAdrConfig(d.adrTrainingConfig || {
+      lastDate: '',
       expirationDate: d.adrTrainingExpirationDate || '',
       intervalDays: d.intervalDays ?? 365,
       reminderDaysBefore: d.reminderDaysBefore ?? 30,

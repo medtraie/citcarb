@@ -37,6 +37,7 @@ export interface Vehicle {
 export type DriverStatus = 'active' | 'suspended' | 'inactive';
 
 export interface DocumentConfig {
+  lastDate?: string;
   expirationDate?: string;
   intervalDays?: number;
   reminderDaysBefore?: number;
