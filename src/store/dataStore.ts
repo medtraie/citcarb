@@ -739,7 +739,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const basePayload = {
+      const fullPayload = {
         id: newId,
         full_name: driver.fullName,
         phone: driver.phone,
@@ -748,22 +748,53 @@ export const useDataStore = create<DataState>((set, get) => ({
         photo_url: driver.photoUrl || null,
         status: driver.status,
         owner_id: driver.ownerId,
-        document_configs: docConfigsPayload,
-      };
-
-      const fullPayload = {
-        ...basePayload,
         license_expiration_date: driver.licenseConfig?.expirationDate || null,
         medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
         professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
         adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
+        document_configs: docConfigsPayload,
       };
+
+      const standardFlatPayload = {
+        id: newId,
+        full_name: driver.fullName,
+        phone: driver.phone,
+        cin: driver.cin,
+        license_number: driver.licenseNumber,
+        photo_url: driver.photoUrl || null,
+        status: driver.status,
+        owner_id: driver.ownerId,
+        license_expiration_date: driver.licenseConfig?.expirationDate || driver.licenseExpirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || driver.medicalCheckupExpirationDate || null,
+        professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || driver.professionalCardExpirationDate || null,
+        interval_days: driver.licenseConfig?.intervalDays ?? driver.intervalDays ?? 365,
+        reminder_days_before: driver.licenseConfig?.reminderDaysBefore ?? driver.reminderDaysBefore ?? 30,
+        auto_renew: driver.licenseConfig?.autoRenew ?? driver.autoRenew ?? false,
+      };
+
+      const isSchemaCacheErr = (err: any) => 
+        err && (err.message?.includes('column') || err.message?.includes('schema cache') || err.code === 'PGRST204');
 
       let { error } = await supabase.from('drivers').insert(fullPayload);
 
-      if (error && (error.message?.includes('column') || error.message?.includes('schema cache') || error.code === 'PGRST204')) {
-        const retryRes = await supabase.from('drivers').insert(basePayload);
+      if (isSchemaCacheErr(error)) {
+        const retryRes = await supabase.from('drivers').insert(standardFlatPayload);
         error = retryRes.error;
+      }
+
+      if (isSchemaCacheErr(error)) {
+        const minimalPayload = {
+          id: newId,
+          full_name: driver.fullName,
+          phone: driver.phone,
+          cin: driver.cin,
+          license_number: driver.licenseNumber,
+          photo_url: driver.photoUrl || null,
+          status: driver.status,
+          owner_id: driver.ownerId,
+        };
+        const retryMinimal = await supabase.from('drivers').insert(minimalPayload);
+        error = retryMinimal.error;
       }
 
       if (error) throw error;
@@ -800,29 +831,56 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const basePayload = {
+      const fullPayload = {
         full_name: driver.fullName,
         phone: driver.phone,
         cin: driver.cin,
         license_number: driver.licenseNumber,
         photo_url: driver.photoUrl || null,
         status: driver.status,
-        document_configs: docConfigsPayload,
-      };
-
-      const fullPayload = {
-        ...basePayload,
         license_expiration_date: driver.licenseConfig?.expirationDate || null,
         medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
         professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
         adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
+        document_configs: docConfigsPayload,
       };
+
+      const standardFlatPayload = {
+        full_name: driver.fullName,
+        phone: driver.phone,
+        cin: driver.cin,
+        license_number: driver.licenseNumber,
+        photo_url: driver.photoUrl || null,
+        status: driver.status,
+        license_expiration_date: driver.licenseConfig?.expirationDate || driver.licenseExpirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || driver.medicalCheckupExpirationDate || null,
+        professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || driver.professionalCardExpirationDate || null,
+        interval_days: driver.licenseConfig?.intervalDays ?? driver.intervalDays ?? 365,
+        reminder_days_before: driver.licenseConfig?.reminderDaysBefore ?? driver.reminderDaysBefore ?? 30,
+        auto_renew: driver.licenseConfig?.autoRenew ?? driver.autoRenew ?? false,
+      };
+
+      const isSchemaCacheErr = (err: any) => 
+        err && (err.message?.includes('column') || err.message?.includes('schema cache') || err.code === 'PGRST204');
 
       let { error } = await supabase.from('drivers').update(fullPayload).eq('id', driver.id);
 
-      if (error && (error.message?.includes('column') || error.message?.includes('schema cache') || error.code === 'PGRST204')) {
-        const retryRes = await supabase.from('drivers').update(basePayload).eq('id', driver.id);
+      if (isSchemaCacheErr(error)) {
+        const retryRes = await supabase.from('drivers').update(standardFlatPayload).eq('id', driver.id);
         error = retryRes.error;
+      }
+
+      if (isSchemaCacheErr(error)) {
+        const minimalPayload = {
+          full_name: driver.fullName,
+          phone: driver.phone,
+          cin: driver.cin,
+          license_number: driver.licenseNumber,
+          photo_url: driver.photoUrl || null,
+          status: driver.status,
+        };
+        const retryMinimal = await supabase.from('drivers').update(minimalPayload).eq('id', driver.id);
+        error = retryMinimal.error;
       }
 
       if (error) throw error;
