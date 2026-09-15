@@ -189,33 +189,33 @@ export const DriversPage: React.FC = () => {
     setLicenseNumber(d.licenseNumber);
     setStatus(d.status);
 
-    setLicenseConfig(d.licenseConfig || {
-      lastDate: '',
-      expirationDate: d.licenseExpirationDate || '',
-      intervalDays: d.intervalDays ?? 365,
-      reminderDaysBefore: d.reminderDaysBefore ?? 30,
-      autoRenew: d.autoRenew || false
+    setLicenseConfig({
+      lastDate: d.licenseConfig?.lastDate || '',
+      expirationDate: d.licenseConfig?.expirationDate || d.licenseExpirationDate || '',
+      intervalDays: d.licenseConfig?.intervalDays ?? d.intervalDays ?? 365,
+      reminderDaysBefore: d.licenseConfig?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+      autoRenew: d.licenseConfig?.autoRenew ?? d.autoRenew ?? false
     });
-    setMedicalConfig(d.medicalCheckupConfig || {
-      lastDate: '',
-      expirationDate: d.medicalCheckupExpirationDate || '',
-      intervalDays: d.intervalDays ?? 365,
-      reminderDaysBefore: d.reminderDaysBefore ?? 30,
-      autoRenew: d.autoRenew || false
+    setMedicalConfig({
+      lastDate: d.medicalCheckupConfig?.lastDate || '',
+      expirationDate: d.medicalCheckupConfig?.expirationDate || d.medicalCheckupExpirationDate || '',
+      intervalDays: d.medicalCheckupConfig?.intervalDays ?? d.intervalDays ?? 365,
+      reminderDaysBefore: d.medicalCheckupConfig?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+      autoRenew: d.medicalCheckupConfig?.autoRenew ?? d.autoRenew ?? false
     });
-    setCardConfig(d.professionalCardConfig || {
-      lastDate: '',
-      expirationDate: d.professionalCardExpirationDate || '',
-      intervalDays: d.intervalDays ?? 365,
-      reminderDaysBefore: d.reminderDaysBefore ?? 30,
-      autoRenew: d.autoRenew || false
+    setCardConfig({
+      lastDate: d.professionalCardConfig?.lastDate || '',
+      expirationDate: d.professionalCardConfig?.expirationDate || d.professionalCardExpirationDate || '',
+      intervalDays: d.professionalCardConfig?.intervalDays ?? d.intervalDays ?? 365,
+      reminderDaysBefore: d.professionalCardConfig?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+      autoRenew: d.professionalCardConfig?.autoRenew ?? d.autoRenew ?? false
     });
-    setAdrConfig(d.adrTrainingConfig || {
-      lastDate: '',
-      expirationDate: d.adrTrainingExpirationDate || '',
-      intervalDays: d.intervalDays ?? 365,
-      reminderDaysBefore: d.reminderDaysBefore ?? 30,
-      autoRenew: d.autoRenew || false
+    setAdrConfig({
+      lastDate: d.adrTrainingConfig?.lastDate || '',
+      expirationDate: d.adrTrainingConfig?.expirationDate || d.adrTrainingExpirationDate || '',
+      intervalDays: d.adrTrainingConfig?.intervalDays ?? d.intervalDays ?? 365,
+      reminderDaysBefore: d.adrTrainingConfig?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+      autoRenew: d.adrTrainingConfig?.autoRenew ?? d.autoRenew ?? false
     });
 
     setError(null);
