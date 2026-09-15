@@ -36,6 +36,13 @@ export interface Vehicle {
 
 export type DriverStatus = 'active' | 'suspended' | 'inactive';
 
+export interface DocumentConfig {
+  expirationDate?: string;
+  intervalDays?: number;
+  reminderDaysBefore?: number;
+  autoRenew?: boolean;
+}
+
 export interface Driver {
   id: string;
   fullName: string;
@@ -46,13 +53,18 @@ export interface Driver {
   status: DriverStatus;
   ownerId: string;
 
-  // Dates d'expiration
+  // Per-Document Configuration
+  licenseConfig?: DocumentConfig;
+  medicalCheckupConfig?: DocumentConfig;
+  professionalCardConfig?: DocumentConfig;
+  adrTrainingConfig?: DocumentConfig;
+
+  // Flat Fields for Backward Compatibility
   licenseExpirationDate?: string;
   medicalCheckupExpirationDate?: string;
   professionalCardExpirationDate?: string;
   adrTrainingExpirationDate?: string;
 
-  // Alert Settings
   alertMode?: 'days';
   intervalDays?: number;
   reminderDaysBefore?: number;

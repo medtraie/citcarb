@@ -4,7 +4,8 @@ import {
   Tank, 
   Barrel, 
   Vehicle, 
-  Driver, 
+  Driver,
+  DocumentConfig, 
   TankMovement, 
   BarrelMovement, 
   FuelFill, 
@@ -568,29 +569,65 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   // Drivers
   fetchDrivers: async (ownerId) => {
-    const processDriverAutoRenew = (d: Driver): Driver => {
-      if (!d.autoRenew) return d;
-      const interval = d.intervalDays || 365;
+    const processDocAutoRenew = (cfg?: DocumentConfig): DocumentConfig | undefined => {
+      if (!cfg || !cfg.expirationDate) return cfg;
+      if (!cfg.autoRenew) return cfg;
+      const interval = cfg.intervalDays || 365;
       const now = new Date();
-
-      const renewIfNeeded = (dateStr?: string): string | undefined => {
-        if (!dateStr) return undefined;
-        let dt = new Date(dateStr);
-        if (isNaN(dt.getTime())) return dateStr;
-        let modified = false;
-        while (dt < now) {
-          dt.setDate(dt.getDate() + interval);
-          modified = true;
-        }
-        return modified ? dt.toISOString().split('T')[0] : dateStr;
+      let dt = new Date(cfg.expirationDate);
+      if (isNaN(dt.getTime())) return cfg;
+      let modified = false;
+      while (dt < now) {
+        dt.setDate(dt.getDate() + interval);
+        modified = true;
+      }
+      return {
+        ...cfg,
+        expirationDate: modified ? dt.toISOString().split('T')[0] : cfg.expirationDate,
       };
+    };
+
+    const processDriverAutoRenew = (d: Driver): Driver => {
+      const docConfigs = (d as any).document_configs || (d as any).documentConfigs || {};
+
+      const licenseConfig: DocumentConfig = processDocAutoRenew(d.licenseConfig || {
+        expirationDate: docConfigs.license?.expirationDate || d.licenseExpirationDate,
+        intervalDays: docConfigs.license?.intervalDays ?? d.intervalDays ?? 365,
+        reminderDaysBefore: docConfigs.license?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+        autoRenew: docConfigs.license?.autoRenew ?? d.autoRenew ?? false,
+      }) || {};
+
+      const medicalCheckupConfig: DocumentConfig = processDocAutoRenew(d.medicalCheckupConfig || {
+        expirationDate: docConfigs.medical?.expirationDate || d.medicalCheckupExpirationDate,
+        intervalDays: docConfigs.medical?.intervalDays ?? d.intervalDays ?? 365,
+        reminderDaysBefore: docConfigs.medical?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+        autoRenew: docConfigs.medical?.autoRenew ?? d.autoRenew ?? false,
+      }) || {};
+
+      const professionalCardConfig: DocumentConfig = processDocAutoRenew(d.professionalCardConfig || {
+        expirationDate: docConfigs.card?.expirationDate || d.professionalCardExpirationDate,
+        intervalDays: docConfigs.card?.intervalDays ?? d.intervalDays ?? 365,
+        reminderDaysBefore: docConfigs.card?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+        autoRenew: docConfigs.card?.autoRenew ?? d.autoRenew ?? false,
+      }) || {};
+
+      const adrTrainingConfig: DocumentConfig = processDocAutoRenew(d.adrTrainingConfig || {
+        expirationDate: docConfigs.adr?.expirationDate || d.adrTrainingExpirationDate,
+        intervalDays: docConfigs.adr?.intervalDays ?? d.intervalDays ?? 365,
+        reminderDaysBefore: docConfigs.adr?.reminderDaysBefore ?? d.reminderDaysBefore ?? 30,
+        autoRenew: docConfigs.adr?.autoRenew ?? d.autoRenew ?? false,
+      }) || {};
 
       return {
         ...d,
-        licenseExpirationDate: renewIfNeeded(d.licenseExpirationDate),
-        medicalCheckupExpirationDate: renewIfNeeded(d.medicalCheckupExpirationDate),
-        professionalCardExpirationDate: renewIfNeeded(d.professionalCardExpirationDate),
-        adrTrainingExpirationDate: renewIfNeeded(d.adrTrainingExpirationDate),
+        licenseConfig,
+        medicalCheckupConfig,
+        professionalCardConfig,
+        adrTrainingConfig,
+        licenseExpirationDate: licenseConfig.expirationDate,
+        medicalCheckupExpirationDate: medicalCheckupConfig.expirationDate,
+        professionalCardExpirationDate: professionalCardConfig.expirationDate,
+        adrTrainingExpirationDate: adrTrainingConfig.expirationDate,
       };
     };
 
@@ -610,24 +647,55 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
-      const mapped: Driver[] = (data || []).map(d => processDriverAutoRenew({
-        id: d.id,
-        fullName: d.full_name,
-        phone: d.phone,
-        cin: d.cin,
-        licenseNumber: d.license_number,
-        photoUrl: d.photo_url,
-        status: d.status,
-        ownerId: d.owner_id,
-        licenseExpirationDate: d.license_expiration_date,
-        medicalCheckupExpirationDate: d.medical_checkup_expiration_date,
-        professionalCardExpirationDate: d.professional_card_expiration_date,
-        adrTrainingExpirationDate: d.adr_training_expiration_date,
-        alertMode: d.alert_mode || 'days',
-        intervalDays: d.interval_days ?? 365,
-        reminderDaysBefore: d.reminder_days_before ?? 30,
-        autoRenew: d.auto_renew ?? false,
-      }));
+      const mapped: Driver[] = (data || []).map(d => {
+        const docConfigs = d.document_configs || {};
+        const licenseConfig: DocumentConfig = processDocAutoRenew({
+          expirationDate: docConfigs.license?.expirationDate || d.license_expiration_date,
+          intervalDays: docConfigs.license?.intervalDays ?? d.interval_days ?? 365,
+          reminderDaysBefore: docConfigs.license?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
+          autoRenew: docConfigs.license?.autoRenew ?? d.auto_renew ?? false,
+        }) || {};
+
+        const medicalCheckupConfig: DocumentConfig = processDocAutoRenew({
+          expirationDate: docConfigs.medical?.expirationDate || d.medical_checkup_expiration_date,
+          intervalDays: docConfigs.medical?.intervalDays ?? d.interval_days ?? 365,
+          reminderDaysBefore: docConfigs.medical?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
+          autoRenew: docConfigs.medical?.autoRenew ?? d.auto_renew ?? false,
+        }) || {};
+
+        const professionalCardConfig: DocumentConfig = processDocAutoRenew({
+          expirationDate: docConfigs.card?.expirationDate || d.professional_card_expiration_date,
+          intervalDays: docConfigs.card?.intervalDays ?? d.interval_days ?? 365,
+          reminderDaysBefore: docConfigs.card?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
+          autoRenew: docConfigs.card?.autoRenew ?? d.auto_renew ?? false,
+        }) || {};
+
+        const adrTrainingConfig: DocumentConfig = processDocAutoRenew({
+          expirationDate: docConfigs.adr?.expirationDate || d.adr_training_expiration_date,
+          intervalDays: docConfigs.adr?.intervalDays ?? d.interval_days ?? 365,
+          reminderDaysBefore: docConfigs.adr?.reminderDaysBefore ?? d.reminder_days_before ?? 30,
+          autoRenew: docConfigs.adr?.autoRenew ?? d.auto_renew ?? false,
+        }) || {};
+
+        return {
+          id: d.id,
+          fullName: d.full_name,
+          phone: d.phone,
+          cin: d.cin,
+          licenseNumber: d.license_number,
+          photoUrl: d.photo_url,
+          status: d.status,
+          ownerId: d.owner_id,
+          licenseConfig,
+          medicalCheckupConfig,
+          professionalCardConfig,
+          adrTrainingConfig,
+          licenseExpirationDate: licenseConfig.expirationDate,
+          medicalCheckupExpirationDate: medicalCheckupConfig.expirationDate,
+          professionalCardExpirationDate: professionalCardConfig.expirationDate,
+          adrTrainingExpirationDate: adrTrainingConfig.expirationDate,
+        };
+      });
 
       set({ drivers: mapped });
     } catch (err: any) {
@@ -639,11 +707,22 @@ export const useDataStore = create<DataState>((set, get) => ({
     const ownerId = driver.ownerId;
     const newId = driver.id || generateUUID();
 
+    const docConfigsPayload = {
+      license: driver.licenseConfig,
+      medical: driver.medicalCheckupConfig,
+      card: driver.professionalCardConfig,
+      adr: driver.adrTrainingConfig,
+    };
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
       const newDrv: Driver = {
         ...driver,
-        id: newId
+        id: newId,
+        licenseExpirationDate: driver.licenseConfig?.expirationDate,
+        medicalCheckupExpirationDate: driver.medicalCheckupConfig?.expirationDate,
+        professionalCardExpirationDate: driver.professionalCardConfig?.expirationDate,
+        adrTrainingExpirationDate: driver.adrTrainingConfig?.expirationDate,
       };
       demo.drivers.push(newDrv);
       saveDemoData(demo);
@@ -661,14 +740,11 @@ export const useDataStore = create<DataState>((set, get) => ({
         photo_url: driver.photoUrl || null,
         status: driver.status,
         owner_id: driver.ownerId,
-        license_expiration_date: driver.licenseExpirationDate || null,
-        medical_checkup_expiration_date: driver.medicalCheckupExpirationDate || null,
-        professional_card_expiration_date: driver.professionalCardExpirationDate || null,
-        adr_training_expiration_date: driver.adrTrainingExpirationDate || null,
-        alert_mode: driver.alertMode || 'days',
-        interval_days: driver.intervalDays ?? 365,
-        reminder_days_before: driver.reminderDaysBefore ?? 30,
-        auto_renew: driver.autoRenew ?? false,
+        license_expiration_date: driver.licenseConfig?.expirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
+        professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
+        adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
+        document_configs: docConfigsPayload,
       };
 
       const { error } = await supabase.from('drivers').insert(payload);
@@ -683,9 +759,23 @@ export const useDataStore = create<DataState>((set, get) => ({
   updateDriver: async (driver) => {
     const ownerId = driver.ownerId;
 
+    const docConfigsPayload = {
+      license: driver.licenseConfig,
+      medical: driver.medicalCheckupConfig,
+      card: driver.professionalCardConfig,
+      adr: driver.adrTrainingConfig,
+    };
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
-      demo.drivers = demo.drivers.map((d: any) => d.id === driver.id ? driver : d);
+      const updatedDrv = {
+        ...driver,
+        licenseExpirationDate: driver.licenseConfig?.expirationDate,
+        medicalCheckupExpirationDate: driver.medicalCheckupConfig?.expirationDate,
+        professionalCardExpirationDate: driver.professionalCardConfig?.expirationDate,
+        adrTrainingExpirationDate: driver.adrTrainingConfig?.expirationDate,
+      };
+      demo.drivers = demo.drivers.map((d: any) => d.id === driver.id ? updatedDrv : d);
       saveDemoData(demo);
       set({ drivers: [...demo.drivers] });
       return;
@@ -699,14 +789,11 @@ export const useDataStore = create<DataState>((set, get) => ({
         license_number: driver.licenseNumber,
         photo_url: driver.photoUrl || null,
         status: driver.status,
-        license_expiration_date: driver.licenseExpirationDate || null,
-        medical_checkup_expiration_date: driver.medicalCheckupExpirationDate || null,
-        professional_card_expiration_date: driver.professionalCardExpirationDate || null,
-        adr_training_expiration_date: driver.adrTrainingExpirationDate || null,
-        alert_mode: driver.alertMode || 'days',
-        interval_days: driver.intervalDays ?? 365,
-        reminder_days_before: driver.reminderDaysBefore ?? 30,
-        auto_renew: driver.autoRenew ?? false,
+        license_expiration_date: driver.licenseConfig?.expirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
+        professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
+        adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
+        document_configs: docConfigsPayload,
       };
 
       const { error } = await supabase.from('drivers').update(payload).eq('id', driver.id);
