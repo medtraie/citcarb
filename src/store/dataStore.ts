@@ -739,7 +739,7 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const payload = {
+      const basePayload = {
         id: newId,
         full_name: driver.fullName,
         phone: driver.phone,
@@ -748,14 +748,24 @@ export const useDataStore = create<DataState>((set, get) => ({
         photo_url: driver.photoUrl || null,
         status: driver.status,
         owner_id: driver.ownerId,
+        document_configs: docConfigsPayload,
+      };
+
+      const fullPayload = {
+        ...basePayload,
         license_expiration_date: driver.licenseConfig?.expirationDate || null,
         medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
         professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
         adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
-        document_configs: docConfigsPayload,
       };
 
-      const { error } = await supabase.from('drivers').insert(payload);
+      let { error } = await supabase.from('drivers').insert(fullPayload);
+
+      if (error && (error.message?.includes('column') || error.message?.includes('schema cache') || error.code === 'PGRST204')) {
+        const retryRes = await supabase.from('drivers').insert(basePayload);
+        error = retryRes.error;
+      }
+
       if (error) throw error;
       await get().fetchDrivers(ownerId);
     } catch (err: any) {
@@ -790,21 +800,31 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     try {
-      const payload = {
+      const basePayload = {
         full_name: driver.fullName,
         phone: driver.phone,
         cin: driver.cin,
         license_number: driver.licenseNumber,
         photo_url: driver.photoUrl || null,
         status: driver.status,
+        document_configs: docConfigsPayload,
+      };
+
+      const fullPayload = {
+        ...basePayload,
         license_expiration_date: driver.licenseConfig?.expirationDate || null,
         medical_checkup_expiration_date: driver.medicalCheckupConfig?.expirationDate || null,
         professional_card_expiration_date: driver.professionalCardConfig?.expirationDate || null,
         adr_training_expiration_date: driver.adrTrainingConfig?.expirationDate || null,
-        document_configs: docConfigsPayload,
       };
 
-      const { error } = await supabase.from('drivers').update(payload).eq('id', driver.id);
+      let { error } = await supabase.from('drivers').update(fullPayload).eq('id', driver.id);
+
+      if (error && (error.message?.includes('column') || error.message?.includes('schema cache') || error.code === 'PGRST204')) {
+        const retryRes = await supabase.from('drivers').update(basePayload).eq('id', driver.id);
+        error = retryRes.error;
+      }
+
       if (error) throw error;
       await get().fetchDrivers(ownerId);
     } catch (err: any) {
