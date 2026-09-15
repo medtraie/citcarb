@@ -17,12 +17,27 @@ export const DriversPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
 
-  // Form fields
+  // Core Form fields
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [cin, setCin] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [status, setStatus] = useState<DriverStatus>('active');
+
+  // Dates d'expiration fields
+  const [licenseExpirationDate, setLicenseExpirationDate] = useState('');
+  const [medicalCheckupExpirationDate, setMedicalCheckupExpirationDate] = useState('');
+  const [professionalCardExpirationDate, setProfessionalCardExpirationDate] = useState('');
+  const [adrTrainingExpirationDate, setAdrTrainingExpirationDate] = useState('');
+
+  // Suivi & Maintenance
+  const [lastInterviewDate, setLastInterviewDate] = useState('');
+
+  // Alert Settings & Auto-Renew
+  const [alertMode, setAlertMode] = useState<'days'>('days');
+  const [intervalDays, setIntervalDays] = useState<number>(365);
+  const [reminderDaysBefore, setReminderDaysBefore] = useState<number>(30);
+  const [autoRenew, setAutoRenew] = useState<boolean>(false);
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,6 +55,15 @@ export const DriversPage: React.FC = () => {
     setCin('');
     setLicenseNumber('');
     setStatus('active');
+    setLicenseExpirationDate('');
+    setMedicalCheckupExpirationDate('');
+    setProfessionalCardExpirationDate('');
+    setAdrTrainingExpirationDate('');
+    setLastInterviewDate('');
+    setAlertMode('days');
+    setIntervalDays(365);
+    setReminderDaysBefore(30);
+    setAutoRenew(false);
     setError(null);
     setModalOpen(true);
   };
@@ -51,6 +75,15 @@ export const DriversPage: React.FC = () => {
     setCin(d.cin);
     setLicenseNumber(d.licenseNumber);
     setStatus(d.status);
+    setLicenseExpirationDate(d.licenseExpirationDate || '');
+    setMedicalCheckupExpirationDate(d.medicalCheckupExpirationDate || '');
+    setProfessionalCardExpirationDate(d.professionalCardExpirationDate || '');
+    setAdrTrainingExpirationDate(d.adrTrainingExpirationDate || '');
+    setLastInterviewDate(d.lastInterviewDate || '');
+    setAlertMode(d.alertMode || 'days');
+    setIntervalDays(d.intervalDays ?? 365);
+    setReminderDaysBefore(d.reminderDaysBefore ?? 30);
+    setAutoRenew(d.autoRenew || false);
     setError(null);
     setModalOpen(true);
   };
@@ -62,22 +95,31 @@ export const DriversPage: React.FC = () => {
     setError(null);
     setSubmitting(true);
     try {
+      const driverData = {
+        fullName,
+        phone,
+        cin,
+        licenseNumber,
+        status,
+        licenseExpirationDate: licenseExpirationDate || undefined,
+        medicalCheckupExpirationDate: medicalCheckupExpirationDate || undefined,
+        professionalCardExpirationDate: professionalCardExpirationDate || undefined,
+        adrTrainingExpirationDate: adrTrainingExpirationDate || undefined,
+        lastInterviewDate: lastInterviewDate || undefined,
+        alertMode,
+        intervalDays: Number(intervalDays) || 365,
+        reminderDaysBefore: Number(reminderDaysBefore) || 30,
+        autoRenew,
+      };
+
       if (editingDriver) {
         await updateDriver({
           ...editingDriver,
-          fullName,
-          phone,
-          cin,
-          licenseNumber,
-          status,
+          ...driverData,
         });
       } else {
         await addDriver({
-          fullName,
-          phone,
-          cin,
-          licenseNumber,
-          status,
+          ...driverData,
           ownerId: user.ownerId,
         });
       }
@@ -99,6 +141,27 @@ export const DriversPage: React.FC = () => {
     if (s === 'active') return 'Actif';
     if (s === 'suspended') return 'Suspendu';
     return 'Inactif';
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('fr-FR');
+  };
+
+  const getExpirationBadge = (dateStr?: string, reminderDays: number = 30) => {
+    if (!dateStr) return null;
+    const expDate = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+
+    if (diffDays < 0) {
+      return <span style={{ color: 'var(--accent-red)', fontWeight: 700, fontSize: '0.75rem' }}>Expiré ({Math.abs(diffDays)} j)</span>;
+    } else if (diffDays <= reminderDays) {
+      return <span style={{ color: 'var(--accent-warning)', fontWeight: 700, fontSize: '0.75rem' }}>Expire dans {diffDays} j</span>;
+    }
+    return <span style={{ color: 'var(--accent-green)', fontSize: '0.75rem' }}>Valide ({diffDays} j)</span>;
   };
 
   if (!user) return null;
@@ -128,10 +191,11 @@ export const DriversPage: React.FC = () => {
           <table className="table">
             <thead>
               <tr>
-                <th>Nom Complet</th>
-                <th>Téléphone</th>
-                <th>CIN</th>
-                <th>N° de Permis</th>
+                <th>Nom & Téléphone</th>
+                <th>CIN & Permis</th>
+                <th>Dates d'Expiration</th>
+                <th>Dernier Entretien</th>
+                <th>Alertes & Renouvellement</th>
                 <th>Statut</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -139,10 +203,37 @@ export const DriversPage: React.FC = () => {
             <tbody>
               {drivers.map(d => (
                 <tr key={d.id}>
-                  <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{d.fullName}</td>
-                  <td>{d.phone}</td>
-                  <td style={{ fontFamily: 'monospace' }}>{d.cin}</td>
-                  <td style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)' }}>{d.licenseNumber}</td>
+                  <td>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{d.fullName}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{d.phone}</div>
+                  </td>
+                  <td>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{d.cin}</div>
+                    <div style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)', fontSize: '0.8rem' }}>{d.licenseNumber}</div>
+                  </td>
+                  <td style={{ fontSize: '0.8rem' }}>
+                    <div><strong>Permis:</strong> {formatDate(d.licenseExpirationDate)} {getExpirationBadge(d.licenseExpirationDate, d.reminderDaysBefore)}</div>
+                    <div><strong>Visite Méd.:</strong> {formatDate(d.medicalCheckupExpirationDate)} {getExpirationBadge(d.medicalCheckupExpirationDate, d.reminderDaysBefore)}</div>
+                    {d.professionalCardExpirationDate && (
+                      <div><strong>Carte Pro:</strong> {formatDate(d.professionalCardExpirationDate)}</div>
+                    )}
+                    {d.adrTrainingExpirationDate && (
+                      <div><strong>Formation ADR:</strong> {formatDate(d.adrTrainingExpirationDate)}</div>
+                    )}
+                  </td>
+                  <td style={{ fontSize: '0.8rem' }}>
+                    {formatDate(d.lastInterviewDate)}
+                  </td>
+                  <td style={{ fontSize: '0.8rem' }}>
+                    <div>Mode: {d.alertMode === 'days' ? 'Par jours' : 'Par jours'}</div>
+                    <div>Intervalle: {d.intervalDays || 365} j</div>
+                    <div>Rappel: {d.reminderDaysBefore || 30} j avant</div>
+                    {d.autoRenew ? (
+                      <span className="badge badge-success" style={{ fontSize: '0.7rem', marginTop: '4px' }}>⚡ Auto-Renouvellement</span>
+                    ) : (
+                      <span className="badge" style={{ fontSize: '0.7rem', marginTop: '4px', opacity: 0.6 }}>Renouvellement Manuel</span>
+                    )}
+                  </td>
                   <td>
                     <span className={getStatusBadgeClass(d.status)}>
                       {getStatusLabel(d.status)}
@@ -183,7 +274,7 @@ export const DriversPage: React.FC = () => {
       {/* Add/Edit Modal */}
       {modalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
             <button className="modal-close" onClick={() => setModalOpen(false)}>&times;</button>
             
             <h2>{editingDriver ? 'Modifier le Chauffeur' : 'Nouveau Chauffeur'}</h2>
@@ -202,71 +293,201 @@ export const DriversPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
-              <div className="form-group">
-                <label className="form-label">Nom Complet</label>
-                <input 
-                  type="text" 
-                  className="form-control"
-                  placeholder="Ex: Ahmed El Mansouri"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Numéro de Téléphone</label>
-                <input 
-                  type="tel" 
-                  className="form-control"
-                  placeholder="Ex: 0661234567"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">CIN (Carte d'identité)</label>
+            <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              {/* Section 1: Informations Générales */}
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-cyan)', marginBottom: '0.75rem' }}>1. Informations Générales</h4>
+                
+                <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                  <label className="form-label">Nom Complet</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="Ex: AB123456"
-                    value={cin}
-                    onChange={(e) => setCin(e.target.value.toUpperCase())}
+                    placeholder="Ex: Ahmed El Mansouri"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Numéro de Permis</label>
+
+                <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                  <label className="form-label">Numéro de Téléphone</label>
                   <input 
-                    type="text" 
+                    type="tel" 
                     className="form-control"
-                    placeholder="Ex: PERM-9988"
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
+                    placeholder="Ex: 0661234567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">CIN (Carte d'identité)</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      placeholder="Ex: AB123456"
+                      value={cin}
+                      onChange={(e) => setCin(e.target.value.toUpperCase())}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Numéro de Permis</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      placeholder="Ex: PERM-9988"
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Statut</label>
+                  <select 
+                    className="form-control"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as DriverStatus)}
+                    required
+                  >
+                    <option value="active">Actif</option>
+                    <option value="suspended">Suspendu</option>
+                    <option value="inactive">Inactif</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Section 2: Dates d'expiration */}
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-green)', marginBottom: '0.75rem' }}>2. Dates d'expiration</h4>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Permis de conduire</label>
+                    <input 
+                      type="date" 
+                      className="form-control"
+                      value={licenseExpirationDate}
+                      onChange={(e) => setLicenseExpirationDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Visite médicale</label>
+                    <input 
+                      type="date" 
+                      className="form-control"
+                      value={medicalCheckupExpirationDate}
+                      onChange={(e) => setMedicalCheckupExpirationDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Carte professionnelle</label>
+                    <input 
+                      type="date" 
+                      className="form-control"
+                      value={professionalCardExpirationDate}
+                      onChange={(e) => setProfessionalCardExpirationDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Formation ADR</label>
+                    <input 
+                      type="date" 
+                      className="form-control"
+                      value={adrTrainingExpirationDate}
+                      onChange={(e) => setAdrTrainingExpirationDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Suivi & Entretien */}
+              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-orange)', marginBottom: '0.75rem' }}>3. Suivi & Entretien</h4>
+                
+                <div className="form-group">
+                  <label className="form-label">Dernière date d'entretien</label>
+                  <input 
+                    type="date" 
+                    className="form-control"
+                    value={lastInterviewDate}
+                    onChange={(e) => setLastInterviewDate(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Statut</label>
-                <select 
-                  className="form-control"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as DriverStatus)}
-                  required
-                >
-                  <option value="active">Actif</option>
-                  <option value="suspended">Suspendu</option>
-                  <option value="inactive">Inactif</option>
-                </select>
+              {/* Section 4: Mode d'alerte, Intervalle & Renouvellement */}
+              <div>
+                <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-purple, #a855f7)', marginBottom: '0.75rem' }}>4. Mode d'alerte & Renouvellement automatique</h4>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Mode d'alerte</label>
+                    <select 
+                      className="form-control"
+                      value={alertMode}
+                      onChange={(e) => setAlertMode(e.target.value as 'days')}
+                    >
+                      <option value="days">Par jours</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Intervalle (jours)</label>
+                    <input 
+                      type="number" 
+                      className="form-control"
+                      placeholder="Ex: 365"
+                      min="1"
+                      value={intervalDays}
+                      onChange={(e) => setIntervalDays(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Créer un rappel lorsqu'il reste (jours)</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    placeholder="Ex: 30"
+                    min="1"
+                    value={reminderDaysBefore}
+                    onChange={(e) => setReminderDaysBefore(Number(e.target.value))}
+                  />
+                </div>
+
+                <div style={{ 
+                  backgroundColor: 'var(--bg-input)', 
+                  padding: '0.75rem 1rem', 
+                  borderRadius: '8px', 
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <input 
+                    type="checkbox" 
+                    id="autoRenew"
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    checked={autoRenew}
+                    onChange={(e) => setAutoRenew(e.target.checked)}
+                  />
+                  <label htmlFor="autoRenew" style={{ cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, fontWeight: 500 }}>
+                    Renouveler automatiquement après l'expiration <br/>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
+                      Si cette option est activée, le renouvellement des dates d'expiration se fait automatiquement selon l'intervalle configuré.
+                    </span>
+                  </label>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button 
                   type="button" 
                   className="btn btn-secondary" 
@@ -293,3 +514,4 @@ export const DriversPage: React.FC = () => {
     </div>
   );
 };
+

@@ -45,6 +45,21 @@ export interface Driver {
   photoUrl?: string;
   status: DriverStatus;
   ownerId: string;
+
+  // Dates d'expiration
+  licenseExpirationDate?: string;
+  medicalCheckupExpirationDate?: string;
+  professionalCardExpirationDate?: string;
+  adrTrainingExpirationDate?: string;
+
+  // Entretien & Suivi
+  lastInterviewDate?: string;
+
+  // Alert Settings
+  alertMode?: 'days';
+  intervalDays?: number;
+  reminderDaysBefore?: number;
+  autoRenew?: boolean;
 }
 
 export type BarrelType = 'hydraulique' | 'motor_oil';

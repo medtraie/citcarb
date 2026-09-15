@@ -568,9 +568,36 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   // Drivers
   fetchDrivers: async (ownerId) => {
+    const processDriverAutoRenew = (d: Driver): Driver => {
+      if (!d.autoRenew) return d;
+      const interval = d.intervalDays || 365;
+      const now = new Date();
+
+      const renewIfNeeded = (dateStr?: string): string | undefined => {
+        if (!dateStr) return undefined;
+        let dt = new Date(dateStr);
+        if (isNaN(dt.getTime())) return dateStr;
+        let modified = false;
+        while (dt < now) {
+          dt.setDate(dt.getDate() + interval);
+          modified = true;
+        }
+        return modified ? dt.toISOString().split('T')[0] : dateStr;
+      };
+
+      return {
+        ...d,
+        licenseExpirationDate: renewIfNeeded(d.licenseExpirationDate),
+        medicalCheckupExpirationDate: renewIfNeeded(d.medicalCheckupExpirationDate),
+        professionalCardExpirationDate: renewIfNeeded(d.professionalCardExpirationDate),
+        adrTrainingExpirationDate: renewIfNeeded(d.adrTrainingExpirationDate),
+      };
+    };
+
     if (ownerId === 'demo_admin_uid') {
       const demo = getDemoData();
-      set({ drivers: demo.drivers });
+      const updatedDrivers = (demo.drivers || []).map((d: Driver) => processDriverAutoRenew(d));
+      set({ drivers: updatedDrivers });
       return;
     }
 
@@ -583,7 +610,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
-      const mapped: Driver[] = (data || []).map(d => ({
+      const mapped: Driver[] = (data || []).map(d => processDriverAutoRenew({
         id: d.id,
         fullName: d.full_name,
         phone: d.phone,
@@ -591,7 +618,16 @@ export const useDataStore = create<DataState>((set, get) => ({
         licenseNumber: d.license_number,
         photoUrl: d.photo_url,
         status: d.status,
-        ownerId: d.owner_id
+        ownerId: d.owner_id,
+        licenseExpirationDate: d.license_expiration_date,
+        medicalCheckupExpirationDate: d.medical_checkup_expiration_date,
+        professionalCardExpirationDate: d.professional_card_expiration_date,
+        adrTrainingExpirationDate: d.adr_training_expiration_date,
+        lastInterviewDate: d.last_interview_date,
+        alertMode: d.alert_mode || 'days',
+        intervalDays: d.interval_days ?? 365,
+        reminderDaysBefore: d.reminder_days_before ?? 30,
+        autoRenew: d.auto_renew ?? false,
       }));
 
       set({ drivers: mapped });
@@ -626,6 +662,15 @@ export const useDataStore = create<DataState>((set, get) => ({
         photo_url: driver.photoUrl || null,
         status: driver.status,
         owner_id: driver.ownerId,
+        license_expiration_date: driver.licenseExpirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupExpirationDate || null,
+        professional_card_expiration_date: driver.professionalCardExpirationDate || null,
+        adr_training_expiration_date: driver.adrTrainingExpirationDate || null,
+        last_interview_date: driver.lastInterviewDate || null,
+        alert_mode: driver.alertMode || 'days',
+        interval_days: driver.intervalDays ?? 365,
+        reminder_days_before: driver.reminderDaysBefore ?? 30,
+        auto_renew: driver.autoRenew ?? false,
       };
 
       const { error } = await supabase.from('drivers').insert(payload);
@@ -656,6 +701,15 @@ export const useDataStore = create<DataState>((set, get) => ({
         license_number: driver.licenseNumber,
         photo_url: driver.photoUrl || null,
         status: driver.status,
+        license_expiration_date: driver.licenseExpirationDate || null,
+        medical_checkup_expiration_date: driver.medicalCheckupExpirationDate || null,
+        professional_card_expiration_date: driver.professionalCardExpirationDate || null,
+        adr_training_expiration_date: driver.adrTrainingExpirationDate || null,
+        last_interview_date: driver.lastInterviewDate || null,
+        alert_mode: driver.alertMode || 'days',
+        interval_days: driver.intervalDays ?? 365,
+        reminder_days_before: driver.reminderDaysBefore ?? 30,
+        auto_renew: driver.autoRenew ?? false,
       };
 
       const { error } = await supabase.from('drivers').update(payload).eq('id', driver.id);
