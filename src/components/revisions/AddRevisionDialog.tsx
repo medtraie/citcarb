@@ -204,6 +204,7 @@ export const AddRevisionDialog: React.FC<AddRevisionDialogProps> = ({
                 <option value="carte_grise">Carte Grise</option>
                 <option value="carte_circulation">Carte de Circulation</option>
                 <option value="extincteur">Extincteur</option>
+                <option value="gps">GPS</option>
                 <option value="autre">Autre Révision / Entretien</option>
               </select>
             </div>
