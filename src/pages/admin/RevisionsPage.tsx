@@ -45,6 +45,7 @@ export const RevisionsPage: React.FC = () => {
   const totalCount = revisions.length;
   const dueSoonCount = revisions.filter(r => r.status === 'due_soon').length;
   const overdueCount = revisions.filter(r => r.status === 'overdue').length;
+  const completedCount = revisions.filter(r => r.status === 'completed').length;
 
   const getTypeLabel = (t: RevisionType) => {
     switch (t) {
@@ -77,6 +78,13 @@ export const RevisionsPage: React.FC = () => {
   };
 
   const getStatusBadge = (s: RevisionStatus) => {
+    if (s === 'completed') {
+      return (
+        <span className="badge" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+          ✓ Terminé
+        </span>
+      );
+    }
     if (s === 'overdue') {
       return (
         <span className="badge badge-danger" style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
@@ -220,6 +228,22 @@ export const RevisionsPage: React.FC = () => {
               }}
             >
               En retard: {overdueCount}
+            </button>
+
+            <button 
+              onClick={() => setStatusFilter(statusFilter === 'completed' ? 'all' : 'completed')}
+              style={{
+                backgroundColor: statusFilter === 'completed' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                color: '#3B82F6',
+                padding: '0.3rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                cursor: 'pointer'
+              }}
+            >
+              ✓ Terminé: {completedCount}
             </button>
           </div>
         </div>
@@ -388,7 +412,9 @@ export const RevisionsPage: React.FC = () => {
                     const vehKm = getVehicleKm(r.vehicleId);
 
                     let ecartStr = '-';
-                    if (r.mode === 'days' && r.nextDueDate) {
+                    if (r.status === 'completed') {
+                      ecartStr = 'Terminé';
+                    } else if (r.mode === 'days' && r.nextDueDate) {
                       const due = new Date(r.nextDueDate).getTime();
                       const now = new Date().getTime();
                       const days = Math.ceil((due - now) / (1000 * 3600 * 24));
@@ -399,7 +425,7 @@ export const RevisionsPage: React.FC = () => {
                     }
 
                     return (
-                      <tr key={r.id}>
+                      <tr key={r.id} style={{ opacity: r.status === 'completed' ? 0.8 : 1 }}>
                         <td style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>
                           {getVehicleLabel(r.vehicleId)}
                         </td>
@@ -425,26 +451,28 @@ export const RevisionsPage: React.FC = () => {
                         <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                           {r.mode === 'days' ? 'Aujourd\'hui' : `${vehKm.toLocaleString()} km`}
                         </td>
-                        <td style={{ fontWeight: 700, color: r.status === 'overdue' ? '#EF4444' : r.status === 'due_soon' ? '#F59E0B' : 'var(--text-primary)' }}>
+                        <td style={{ fontWeight: 700, color: r.status === 'completed' ? '#3B82F6' : r.status === 'overdue' ? '#EF4444' : r.status === 'due_soon' ? '#F59E0B' : 'var(--text-primary)' }}>
                           {r.mode === 'days' ? (r.nextDueDate || '-') : `${(r.nextDueKm || 0).toLocaleString()} km`}
                         </td>
-                        <td style={{ fontSize: '0.85rem', fontWeight: 600, color: r.status === 'overdue' ? '#EF4444' : r.status === 'due_soon' ? '#F59E0B' : 'var(--accent-green)' }}>
+                        <td style={{ fontSize: '0.85rem', fontWeight: 600, color: r.status === 'completed' ? '#3B82F6' : r.status === 'overdue' ? '#EF4444' : r.status === 'due_soon' ? '#F59E0B' : 'var(--accent-green)' }}>
                           {ecartStr}
                         </td>
                         <td>{getStatusBadge(r.status)}</td>
                         <td style={{ textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.4rem' }}>
-                          <button 
-                            className="btn btn-success" 
-                            style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
-                            title="Marquer comme effectué"
-                            onClick={() => {
-                              if (window.confirm('Marquer cette révision comme effectuée ? La prochaine date/compteur sera automatiquement calculée.')) {
-                                completeRevision(r.id, user.ownerId);
-                              }
-                            }}
-                          >
-                            ✓ Valider
-                          </button>
+                          {r.status !== 'completed' && (
+                            <button 
+                              className="btn btn-success" 
+                              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+                              title="Marquer comme effectué"
+                              onClick={() => {
+                                if (window.confirm('Marquer cette révision comme effectuée ? La prochaine date/compteur sera automatiquement calculée.')) {
+                                  completeRevision(r.id, user.ownerId);
+                                }
+                              }}
+                            >
+                              ✓ Valider
+                            </button>
+                          )}
 
                           {user.role === 'admin' && (
                             <>

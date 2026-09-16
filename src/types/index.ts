@@ -158,7 +158,7 @@ export interface AppNotification {
 
 export type RevisionType = 'vidange' | 'tachygraphe' | 'visite_technique' | 'assurance' | 'vignette' | 'carte_grise' | 'carte_circulation' | 'extincteur' | 'gps' | 'autre';
 export type RevisionMode = 'days' | 'mileage';
-export type RevisionStatus = 'up_to_date' | 'due_soon' | 'overdue';
+export type RevisionStatus = 'up_to_date' | 'due_soon' | 'overdue' | 'completed';
 
 export interface Revision {
   id: string;

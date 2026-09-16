@@ -11,6 +11,7 @@ import {
   FuelFill, 
   AppNotification,
   Revision,
+  RevisionStatus,
   Repair,
   RepairType,
   RepairPriority,
@@ -2135,40 +2136,82 @@ export const useDataStore = create<DataState>((set, get) => ({
           }
           return { ...r, status };
         });
-        const dedupMap = new Map<string, Revision>();
-        for (const rev of computed) {
+        const demoMapped: Revision[] = (demo.revisions || []).map((r: Revision) => {
+          let v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+          if (!v && vehs.length > 0) {
+            v = vehs[0];
+            r.vehicleId = v.id;
+          }
+          return {
+            ...r,
+            vehicleId: r.vehicleId || (v ? v.id : ''),
+            status: (r.status as RevisionStatus) || 'up_to_date'
+          };
+        });
+
+        const groups = new Map<string, Revision[]>();
+        for (const rev of demoMapped) {
           if (!rev.vehicleId) continue;
           const key = `${rev.vehicleId}_${rev.type}`;
-          const existing = dedupMap.get(key);
-          if (!existing) {
-            dedupMap.set(key, rev);
-          } else {
-            const existingDate = existing.nextDueDate ? new Date(existing.nextDueDate).getTime() : 0;
-            const currentDate = rev.nextDueDate ? new Date(rev.nextDueDate).getTime() : 0;
-            if (currentDate >= existingDate) {
-              dedupMap.set(key, rev);
-            }
-          }
+          const list = groups.get(key) || [];
+          list.push(rev);
+          groups.set(key, list);
         }
-        set({ revisions: Array.from(dedupMap.values()) });
+
+        const finalDemoRevs: Revision[] = [];
+        for (const [, revs] of groups.entries()) {
+          revs.sort((a, b) => {
+            const aDate = a.nextDueDate ? new Date(a.nextDueDate).getTime() : (a.lastDate ? new Date(a.lastDate).getTime() : 0);
+            const bDate = b.nextDueDate ? new Date(b.nextDueDate).getTime() : (b.lastDate ? new Date(b.lastDate).getTime() : 0);
+            if (bDate !== aDate) return bDate - aDate;
+            const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return bCreated - aCreated;
+          });
+
+          revs.forEach((r, idx) => {
+            let v = vehs.find((veh: Vehicle) => veh.id === r.vehicleId);
+            if (!v && vehs.length > 0) v = vehs[0];
+
+            if (r.status === 'completed') {
+              finalDemoRevs.push(r);
+              return;
+            }
+
+            if (idx > 0) {
+              finalDemoRevs.push({ ...r, status: 'completed' });
+              return;
+            }
+
+            let status: RevisionStatus = 'up_to_date';
+            if (r.mode === 'days' && r.nextDueDate) {
+              const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+              if (diffDays < 0) status = 'overdue';
+              else if (diffDays <= 15) status = 'due_soon';
+              else status = 'up_to_date';
+            } else if (r.mode === 'mileage' && r.nextDueKm && v) {
+              const diffKm = r.nextDueKm - v.currentMileage;
+              if (diffKm < 0) status = 'overdue';
+              else if (diffKm <= 1000) status = 'due_soon';
+              else status = 'up_to_date';
+            }
+            finalDemoRevs.push({ ...r, status });
+          });
+        }
+
+        finalDemoRevs.sort((a, b) => {
+          const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bCreated - aCreated;
+        });
+
+        set({ revisions: finalDemoRevs });
         return;
       }
 
       const mapped: Revision[] = (data || []).map(r => {
         let v = vehs.find(veh => veh.id === r.vehicle_id);
         if (!v && vehs.length > 0) v = vehs[0];
-        let status: 'up_to_date' | 'due_soon' | 'overdue' = r.status || 'up_to_date';
-        if (r.mode === 'days' && r.next_due_date) {
-          const diffDays = Math.ceil((new Date(r.next_due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-          if (diffDays < 0) status = 'overdue';
-          else if (diffDays <= 15) status = 'due_soon';
-          else status = 'up_to_date';
-        } else if (r.mode === 'mileage' && r.next_due_km && v) {
-          const diffKm = r.next_due_km - v.currentMileage;
-          if (diffKm < 0) status = 'overdue';
-          else if (diffKm <= 1000) status = 'due_soon';
-          else status = 'up_to_date';
-        }
 
         return {
           id: r.id,
@@ -2184,33 +2227,73 @@ export const useDataStore = create<DataState>((set, get) => ({
           cost: r.cost ? Number(r.cost) : undefined,
           provider: r.provider,
           notes: r.notes,
-          status,
+          status: (r.status as RevisionStatus) || 'up_to_date',
           ownerId: r.owner_id,
           createdAt: r.created_at
         };
       });
 
-      // Deduplicate by (vehicleId, type) to keep only the active latest revision
-      const dedupMap = new Map<string, Revision>();
+      // Group by (vehicleId, type) so older superseded revisions become 'completed'
+      // while keeping all records in the table to preserve history
+      const groups = new Map<string, Revision[]>();
       for (const rev of mapped) {
         if (!rev.vehicleId) continue;
         const key = `${rev.vehicleId}_${rev.type}`;
-        const existing = dedupMap.get(key);
-        if (!existing) {
-          dedupMap.set(key, rev);
-        } else {
-          const existingDueDate = existing.nextDueDate ? new Date(existing.nextDueDate).getTime() : 0;
-          const currentDueDate = rev.nextDueDate ? new Date(rev.nextDueDate).getTime() : 0;
-          const existingCreatedAt = existing.createdAt ? new Date(existing.createdAt).getTime() : 0;
-          const currentCreatedAt = rev.createdAt ? new Date(rev.createdAt).getTime() : 0;
-
-          if (currentDueDate > existingDueDate || (currentDueDate === existingDueDate && currentCreatedAt > existingCreatedAt)) {
-            dedupMap.set(key, rev);
-          }
-        }
+        const list = groups.get(key) || [];
+        list.push(rev);
+        groups.set(key, list);
       }
 
-      set({ revisions: Array.from(dedupMap.values()) });
+      const finalRevisions: Revision[] = [];
+      for (const [, revs] of groups.entries()) {
+        revs.sort((a, b) => {
+          const aDate = a.nextDueDate ? new Date(a.nextDueDate).getTime() : (a.lastDate ? new Date(a.lastDate).getTime() : 0);
+          const bDate = b.nextDueDate ? new Date(b.nextDueDate).getTime() : (b.lastDate ? new Date(b.lastDate).getTime() : 0);
+          if (bDate !== aDate) return bDate - aDate;
+          const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bCreated - aCreated;
+        });
+
+        revs.forEach((r, idx) => {
+          let v = vehs.find(veh => veh.id === r.vehicleId);
+          if (!v && vehs.length > 0) v = vehs[0];
+
+          if (r.status === 'completed') {
+            finalRevisions.push(r);
+            return;
+          }
+
+          if (idx > 0) {
+            // Older revision for the same vehicle and type when a newer one exists -> 'completed' (Terminé)
+            finalRevisions.push({ ...r, status: 'completed' });
+            return;
+          }
+
+          // Active revision (idx === 0)
+          let status: RevisionStatus = 'up_to_date';
+          if (r.mode === 'days' && r.nextDueDate) {
+            const diffDays = Math.ceil((new Date(r.nextDueDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+            if (diffDays < 0) status = 'overdue';
+            else if (diffDays <= 15) status = 'due_soon';
+            else status = 'up_to_date';
+          } else if (r.mode === 'mileage' && r.nextDueKm && v) {
+            const diffKm = r.nextDueKm - v.currentMileage;
+            if (diffKm < 0) status = 'overdue';
+            else if (diffKm <= 1000) status = 'due_soon';
+            else status = 'up_to_date';
+          }
+          finalRevisions.push({ ...r, status });
+        });
+      }
+
+      finalRevisions.sort((a, b) => {
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bCreated - aCreated;
+      });
+
+      set({ revisions: finalRevisions });
     } catch (err: any) {
       console.warn('Fallback to demo revisions:', err.message);
       const demo = getDemoData();
@@ -2220,6 +2303,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   addRevision: async (revisionData) => {
     const ownerId = revisionData.ownerId;
+    const newId = revisionData.id || generateUUID();
     const nowStr = new Date().toISOString();
 
     let nextDueDate = revisionData.nextDueDate;
@@ -2234,76 +2318,16 @@ export const useDataStore = create<DataState>((set, get) => ({
     }
 
     const currentRevisions = get().revisions;
-    // Check if an existing revision already exists for this vehicle & type
-    const existingRev = currentRevisions.find(
-      r => r.vehicleId === revisionData.vehicleId && r.type === revisionData.type
-    );
 
-    if (existingRev) {
-      // Update existing revision to renew it and clear overdue state
-      const updatedRev: Revision = {
-        ...existingRev,
-        ...revisionData,
-        id: existingRev.id,
-        nextDueDate,
-        nextDueKm,
-        status: 'up_to_date',
-        createdAt: nowStr,
-      };
-
-      const otherRevs = currentRevisions.filter(
-        r => r.id !== existingRev.id && !(r.vehicleId === revisionData.vehicleId && r.type === revisionData.type)
-      );
-      set({ revisions: [updatedRev, ...otherRevs] });
-
-      const demo = getDemoData();
-      demo.revisions = (demo.revisions || []).filter(
-        (r: Revision) => !(r.vehicleId === revisionData.vehicleId && r.type === revisionData.type)
-      );
-      demo.revisions.unshift(updatedRev);
-      saveDemoData(demo);
-
-      if (ownerId === 'demo_admin_uid') {
-        return;
+    // For any previous revision of the same vehicle and type that was overdue:
+    // mark its status as 'completed' (Terminé) while keeping it in the list to preserve history!
+    const updatedExistingRevs = currentRevisions.map(r => {
+      if (r.vehicleId === revisionData.vehicleId && r.type === revisionData.type) {
+        return { ...r, status: 'completed' as RevisionStatus };
       }
+      return r;
+    });
 
-      try {
-        const payload: any = {
-          vehicle_id: revisionData.vehicleId,
-          type: revisionData.type,
-          mode: revisionData.mode,
-          interval_days: revisionData.intervalDays || null,
-          last_date: revisionData.lastDate || null,
-          next_due_date: nextDueDate || null,
-          interval_km: revisionData.intervalKm || null,
-          last_km: revisionData.lastKm || null,
-          next_due_km: nextDueKm || null,
-          cost: revisionData.cost || 0,
-          provider: revisionData.provider || null,
-          notes: revisionData.notes || null,
-          status: 'up_to_date',
-          created_at: nowStr,
-        };
-
-        await supabase.from('revisions').update(payload).eq('id', existingRev.id);
-
-        // Clean up duplicate entries in Supabase
-        const duplicates = currentRevisions.filter(
-          r => r.id !== existingRev.id && r.vehicleId === revisionData.vehicleId && r.type === revisionData.type
-        );
-        for (const dup of duplicates) {
-          await supabase.from('revisions').delete().eq('id', dup.id);
-        }
-
-        await get().fetchRevisions(ownerId);
-      } catch (err: any) {
-        console.warn('Supabase update revision exception:', err.message);
-      }
-      return;
-    }
-
-    // If no existing revision for this vehicle + type, insert a new one
-    const newId = revisionData.id || generateUUID();
     const newRev: Revision = {
       ...revisionData,
       id: newId,
@@ -2313,10 +2337,15 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: nowStr,
     };
 
-    set({ revisions: [newRev, ...currentRevisions] });
+    set({ revisions: [newRev, ...updatedExistingRevs] });
 
     const demo = getDemoData();
-    demo.revisions = demo.revisions || [];
+    demo.revisions = (demo.revisions || []).map((r: Revision) => {
+      if (r.vehicleId === revisionData.vehicleId && r.type === revisionData.type) {
+        return { ...r, status: 'completed' };
+      }
+      return r;
+    });
     demo.revisions.unshift(newRev);
     saveDemoData(demo);
 
@@ -2328,6 +2357,20 @@ export const useDataStore = create<DataState>((set, get) => ({
       const isUUID = (str?: string) => str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
       const safeVehId = isUUID(revisionData.vehicleId) ? revisionData.vehicleId : null;
 
+      // 1. Mark previous revisions for the same vehicle and type as 'completed' in Supabase
+      if (safeVehId) {
+        try {
+          await supabase
+            .from('revisions')
+            .update({ status: 'completed' })
+            .eq('vehicle_id', safeVehId)
+            .eq('type', revisionData.type);
+        } catch (updErr: any) {
+          console.warn('Notice updating older revisions to completed in Supabase:', updErr.message);
+        }
+      }
+
+      // 2. Insert new revision into Supabase
       const payload: any = {
         id: isUUID(newId) ? newId : generateUUID(),
         vehicle_id: safeVehId,
