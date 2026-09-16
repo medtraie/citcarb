@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
+import { PageLoader } from '../common/PageLoader';
 
 export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(true);
   const location = useLocation();
+
+  useEffect(() => {
+    setIsNavigating(true);
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 550);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Helper to determine title based on path
   const getPageTitle = () => {
@@ -13,7 +23,11 @@ export const AppLayout: React.FC = () => {
     if (path.startsWith('/admin/vehicles')) return 'Gestion des Véhicules';
     if (path.startsWith('/admin/drivers')) return 'Gestion des Chauffeurs';
     if (path.startsWith('/admin/barrels')) return 'Gestion des Barils d\'Huile';
+    if (path.startsWith('/admin/revisions')) return 'Gestion des Révisions';
+    if (path.startsWith('/admin/repairs')) return 'Gestion des Réparations';
     if (path.startsWith('/admin/reports')) return 'Rapports et Analyses';
+    if (path.startsWith('/admin/agents')) return 'Gestion des Agents';
+    if (path.startsWith('/admin/analytics')) return 'Analytique Active';
     if (path.startsWith('/manager/accounts')) return 'Gestion des Comptes Agents';
     if (path.startsWith('/admin')) return 'Tableau de bord Admin';
     if (path.startsWith('/manager')) return 'Tableau de bord Manager';
@@ -23,6 +37,9 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="app-container">
+      {/* Navigation loading overlay */}
+      {isNavigating && <PageLoader />}
+
       <Sidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
