@@ -2135,7 +2135,22 @@ export const useDataStore = create<DataState>((set, get) => ({
           }
           return { ...r, status };
         });
-        set({ revisions: computed });
+        const dedupMap = new Map<string, Revision>();
+        for (const rev of computed) {
+          if (!rev.vehicleId) continue;
+          const key = `${rev.vehicleId}_${rev.type}`;
+          const existing = dedupMap.get(key);
+          if (!existing) {
+            dedupMap.set(key, rev);
+          } else {
+            const existingDate = existing.nextDueDate ? new Date(existing.nextDueDate).getTime() : 0;
+            const currentDate = rev.nextDueDate ? new Date(rev.nextDueDate).getTime() : 0;
+            if (currentDate >= existingDate) {
+              dedupMap.set(key, rev);
+            }
+          }
+        }
+        set({ revisions: Array.from(dedupMap.values()) });
         return;
       }
 
@@ -2175,7 +2190,27 @@ export const useDataStore = create<DataState>((set, get) => ({
         };
       });
 
-      set({ revisions: mapped });
+      // Deduplicate by (vehicleId, type) to keep only the active latest revision
+      const dedupMap = new Map<string, Revision>();
+      for (const rev of mapped) {
+        if (!rev.vehicleId) continue;
+        const key = `${rev.vehicleId}_${rev.type}`;
+        const existing = dedupMap.get(key);
+        if (!existing) {
+          dedupMap.set(key, rev);
+        } else {
+          const existingDueDate = existing.nextDueDate ? new Date(existing.nextDueDate).getTime() : 0;
+          const currentDueDate = rev.nextDueDate ? new Date(rev.nextDueDate).getTime() : 0;
+          const existingCreatedAt = existing.createdAt ? new Date(existing.createdAt).getTime() : 0;
+          const currentCreatedAt = rev.createdAt ? new Date(rev.createdAt).getTime() : 0;
+
+          if (currentDueDate > existingDueDate || (currentDueDate === existingDueDate && currentCreatedAt > existingCreatedAt)) {
+            dedupMap.set(key, rev);
+          }
+        }
+      }
+
+      set({ revisions: Array.from(dedupMap.values()) });
     } catch (err: any) {
       console.warn('Fallback to demo revisions:', err.message);
       const demo = getDemoData();
@@ -2185,7 +2220,6 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   addRevision: async (revisionData) => {
     const ownerId = revisionData.ownerId;
-    const newId = revisionData.id || generateUUID();
     const nowStr = new Date().toISOString();
 
     let nextDueDate = revisionData.nextDueDate;
@@ -2199,6 +2233,77 @@ export const useDataStore = create<DataState>((set, get) => ({
       nextDueKm = Number(revisionData.lastKm) + Number(revisionData.intervalKm);
     }
 
+    const currentRevisions = get().revisions;
+    // Check if an existing revision already exists for this vehicle & type
+    const existingRev = currentRevisions.find(
+      r => r.vehicleId === revisionData.vehicleId && r.type === revisionData.type
+    );
+
+    if (existingRev) {
+      // Update existing revision to renew it and clear overdue state
+      const updatedRev: Revision = {
+        ...existingRev,
+        ...revisionData,
+        id: existingRev.id,
+        nextDueDate,
+        nextDueKm,
+        status: 'up_to_date',
+        createdAt: nowStr,
+      };
+
+      const otherRevs = currentRevisions.filter(
+        r => r.id !== existingRev.id && !(r.vehicleId === revisionData.vehicleId && r.type === revisionData.type)
+      );
+      set({ revisions: [updatedRev, ...otherRevs] });
+
+      const demo = getDemoData();
+      demo.revisions = (demo.revisions || []).filter(
+        (r: Revision) => !(r.vehicleId === revisionData.vehicleId && r.type === revisionData.type)
+      );
+      demo.revisions.unshift(updatedRev);
+      saveDemoData(demo);
+
+      if (ownerId === 'demo_admin_uid') {
+        return;
+      }
+
+      try {
+        const payload: any = {
+          vehicle_id: revisionData.vehicleId,
+          type: revisionData.type,
+          mode: revisionData.mode,
+          interval_days: revisionData.intervalDays || null,
+          last_date: revisionData.lastDate || null,
+          next_due_date: nextDueDate || null,
+          interval_km: revisionData.intervalKm || null,
+          last_km: revisionData.lastKm || null,
+          next_due_km: nextDueKm || null,
+          cost: revisionData.cost || 0,
+          provider: revisionData.provider || null,
+          notes: revisionData.notes || null,
+          status: 'up_to_date',
+          created_at: nowStr,
+        };
+
+        await supabase.from('revisions').update(payload).eq('id', existingRev.id);
+
+        // Clean up duplicate entries in Supabase
+        const duplicates = currentRevisions.filter(
+          r => r.id !== existingRev.id && r.vehicleId === revisionData.vehicleId && r.type === revisionData.type
+        );
+        for (const dup of duplicates) {
+          await supabase.from('revisions').delete().eq('id', dup.id);
+        }
+
+        await get().fetchRevisions(ownerId);
+      } catch (err: any) {
+        console.warn('Supabase update revision exception:', err.message);
+      }
+      return;
+    }
+
+    // If no existing revision for this vehicle + type, insert a new one
+    const newId = revisionData.id || generateUUID();
     const newRev: Revision = {
       ...revisionData,
       id: newId,
@@ -2208,11 +2313,8 @@ export const useDataStore = create<DataState>((set, get) => ({
       createdAt: nowStr,
     };
 
-    // Update state IMMEDIATELY for instant UI response
-    const currentRevisions = get().revisions;
     set({ revisions: [newRev, ...currentRevisions] });
 
-    // Always update demo localstorage as fallback
     const demo = getDemoData();
     demo.revisions = demo.revisions || [];
     demo.revisions.unshift(newRev);
@@ -2249,6 +2351,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       if (error) {
         console.warn('Supabase insert notice:', error.message);
       }
+      await get().fetchRevisions(ownerId);
     } catch (err: any) {
       console.warn('Supabase insert exception:', err.message);
     }
