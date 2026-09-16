@@ -319,13 +319,26 @@ export const AdminDashboard: React.FC = () => {
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-secondary)', margin: 0 }}>
               Niveau de Citerne Principal (Gasoil)
             </h2>
+          </div>
+          <div className="card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.75rem', flex: 1, borderRadius: '16px' }}>
             {tank && (
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem', alignItems: 'center', zIndex: 5 }}>
                 <button
                   className="btn-icon"
                   onClick={() => setTankReportOpen(true)}
                   title="Générer le Rapport Citerne PDF"
-                  style={{ color: 'var(--accent-orange)', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  style={{
+                    color: 'var(--accent-orange)',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                 </button>
@@ -335,7 +348,18 @@ export const AdminDashboard: React.FC = () => {
                       className="btn-icon"
                       onClick={() => setEditTankOpen(true)}
                       title="Modifier la citerne"
-                      style={{ color: 'var(--accent-cyan)', background: 'transparent', border: 'none' }}
+                      style={{
+                        color: 'var(--accent-cyan)',
+                        background: 'var(--bg-input)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                        padding: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                     </button>
@@ -343,7 +367,18 @@ export const AdminDashboard: React.FC = () => {
                       className="btn-icon"
                       onClick={() => handleDeleteTank(tank.id)}
                       title="Supprimer la citerne"
-                      style={{ color: 'var(--accent-red)', background: 'transparent', border: 'none' }}
+                      style={{
+                        color: 'var(--accent-red)',
+                        background: 'var(--bg-input)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                        padding: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
@@ -351,8 +386,6 @@ export const AdminDashboard: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.75rem', flex: 1, borderRadius: '16px' }}>
             <TankVisualization 
               capacity={tank ? tank.capacity : 50000} 
               currentVolume={tank ? tank.currentVolume : 0} 
