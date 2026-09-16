@@ -359,19 +359,20 @@ export const RevisionsPage: React.FC = () => {
               className="form-control"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ minWidth: '170px' }}
+              style={{ minWidth: '180px' }}
             >
               <option value="all">Tous les statuts</option>
+              <option value="up_to_date">Conforme (À jour)</option>
               <option value="due_soon">À faire (Urgent)</option>
               <option value="overdue">En retard</option>
-              <option value="up_to_date">Conforme (À jour)</option>
+              <option value="completed">✓ Terminé</option>
             </select>
 
             <select 
               className="form-control"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              style={{ minWidth: '190px' }}
+              style={{ minWidth: '200px' }}
             >
               <option value="all">Tous les types</option>
               <option value="vidange">Vidange Huile</option>
@@ -379,7 +380,11 @@ export const RevisionsPage: React.FC = () => {
               <option value="visite_technique">Visite technique</option>
               <option value="assurance">Assurance</option>
               <option value="vignette">Vignette</option>
-              <option value="autre">Autre</option>
+              <option value="carte_grise">Carte Grise</option>
+              <option value="carte_circulation">Carte de Circulation</option>
+              <option value="extincteur">Extincteur</option>
+              <option value="gps">GPS</option>
+              <option value="autre">Autre Révision</option>
             </select>
           </div>
 
