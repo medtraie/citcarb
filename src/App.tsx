@@ -63,7 +63,7 @@ export const App: React.FC = () => {
           <Route 
             path="/admin/drivers" 
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'agent', 'responsable']}>
                 <DriversPage />
               </ProtectedRoute>
             } 

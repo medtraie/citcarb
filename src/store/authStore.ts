@@ -51,7 +51,7 @@ const DEMO_PROFILES: Record<string, Omit<UserProfile, 'email'>> = {
     permissions: {
       can_refill: true,
       can_add_vehicle: false,
-      can_add_driver: false,
+      can_add_driver: true,
       can_view_reports: true,
       can_manage_users: false,
     }
@@ -196,7 +196,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           permissions: {
             can_refill: true,
             can_add_vehicle: !isAgentAccount,
-            can_add_driver: !isAgentAccount,
+            can_add_driver: true,
             can_view_reports: true,
             can_manage_users: !isAgentAccount,
           }
@@ -217,7 +217,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const parsedPermissions = {
           can_refill: true,
           can_add_vehicle: userRole === 'admin',
-          can_add_driver: userRole === 'admin',
+          can_add_driver: userRole === 'admin' || userRole === 'agent',
           can_view_reports: true,
           can_manage_users: userRole === 'admin',
         };
@@ -301,7 +301,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const parsedPermissions = {
           can_refill: true,
           can_add_vehicle: userRole === 'admin',
-          can_add_driver: userRole === 'admin',
+          can_add_driver: userRole === 'admin' || userRole === 'agent',
           can_view_reports: true,
           can_manage_users: userRole === 'admin',
         };
@@ -383,7 +383,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         permissions: {
           can_refill: true,
           can_add_vehicle: false,
-          can_add_driver: false,
+          can_add_driver: true,
           can_view_reports: true,
           can_manage_users: false,
         },
@@ -422,7 +422,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         permissions: {
           can_refill: true,
           can_add_vehicle: false,
-          can_add_driver: false,
+          can_add_driver: true,
           can_view_reports: true,
           can_manage_users: false,
         }

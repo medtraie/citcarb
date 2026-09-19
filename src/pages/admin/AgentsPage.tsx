@@ -51,7 +51,7 @@ export const AgentsPage: React.FC = () => {
             email: 'user12@gmail.com',
             full_name: 'Utilisateur / Agent',
             role: 'agent',
-            permissions: { can_refill: true, can_add_vehicle: false, can_add_driver: false, can_view_reports: true },
+            permissions: { can_refill: true, can_add_vehicle: false, can_add_driver: true, can_view_reports: true },
             is_completed: true,
             created_at: new Date().toISOString()
           }
@@ -74,7 +74,7 @@ export const AgentsPage: React.FC = () => {
       if (err) throw err;
 
       const mappedAgents: AgentProfile[] = (data || []).map(a => {
-        const defaultPerms = { can_refill: true, can_add_vehicle: false, can_add_driver: false, can_view_reports: true };
+        const defaultPerms = { can_refill: true, can_add_vehicle: false, can_add_driver: true, can_view_reports: true };
         let parsed = defaultPerms;
         if (a.permissions && typeof a.permissions === 'object') {
           parsed = { ...defaultPerms, ...a.permissions };
@@ -631,6 +631,7 @@ export const AgentsPage: React.FC = () => {
                   <li>✓ Saisie rapide des pleins de gasoil (Citerne)</li>
                   <li>✓ Enregistrement de la consommation d'huile (Barils)</li>
                   <li>✓ Création de nouvelles réparations & révisions</li>
+                  <li>✓ Gestion et enregistrement des Chauffeurs</li>
                   <li>✓ Consultation et export des rapports PDF</li>
                 </ul>
               </div>
@@ -641,7 +642,7 @@ export const AgentsPage: React.FC = () => {
                   Restrictions de Sécurité Appliquées
                 </h4>
                 <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                  Cet agent ne peut pas accéder aux modules stratégiques (Analytique Active IA, Véhicules, Chauffeurs) et ne possède aucun droit de modification ou de suppression sur les données enregistrées.
+                  Cet agent ne peut pas accéder aux modules stratégiques réservés (Analytique Active IA, Véhicules) et ne possède aucun droit de modification ou de suppression sur les jauges et configurations.
                 </p>
               </div>
 

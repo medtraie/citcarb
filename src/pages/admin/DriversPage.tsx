@@ -322,7 +322,7 @@ export const DriversPage: React.FC = () => {
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
           Liste des chauffeurs ({drivers.length} conducteurs)
         </h2>
-        {user.role === 'admin' && (
+        {(user.role === 'admin' || user.role === 'agent' || user.permissions?.can_add_driver) && (
           <button className="btn btn-primary" onClick={openAddModal}>
             + Ajouter un Chauffeur
           </button>
@@ -391,7 +391,7 @@ export const DriversPage: React.FC = () => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                        {user.role === 'admin' && (
+                        {(user.role === 'admin' || user.role === 'agent' || user.permissions?.can_add_driver) && (
                           <>
                             <button 
                               className="btn btn-secondary" 

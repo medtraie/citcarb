@@ -53,7 +53,7 @@ export const AccountsPage: React.FC = () => {
             email: 'agent@demo.com',
             full_name: 'Agent de Carburant',
             role: 'agent',
-            permissions: { can_refill: true, can_add_vehicle: false, can_add_driver: false, can_view_reports: false },
+            permissions: { can_refill: true, can_add_vehicle: false, can_add_driver: true, can_view_reports: false },
             is_completed: true
           }
         ];
@@ -75,7 +75,7 @@ export const AccountsPage: React.FC = () => {
       if (err) throw err;
 
       const mappedAgents: AgentProfile[] = (data || []).map(a => {
-        const defaultPerms = { can_refill: true, can_add_vehicle: false, can_add_driver: false, can_view_reports: false };
+        const defaultPerms = { can_refill: true, can_add_vehicle: false, can_add_driver: true, can_view_reports: false };
         let parsed = defaultPerms;
         if (a.permissions && typeof a.permissions === 'object') {
           parsed = { ...defaultPerms, ...a.permissions };
@@ -152,7 +152,7 @@ export const AccountsPage: React.FC = () => {
         permissions: {
           can_refill: canRefill,
           can_add_vehicle: false,
-          can_add_driver: false,
+          can_add_driver: true,
           can_view_reports: canViewReports
         },
         is_completed: true
@@ -182,7 +182,7 @@ export const AccountsPage: React.FC = () => {
         permissions: {
           can_refill: canRefill,
           can_add_vehicle: false,
-          can_add_driver: false,
+          can_add_driver: true,
           can_view_reports: canViewReports
         }
       };
